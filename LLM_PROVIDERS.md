@@ -125,18 +125,90 @@ See full list: `ollama list` or https://ollama.ai/library
 - No usage costs
 - Fast inference on local GPU
 
+### 4. Anthropic
+Use Claude models via the official Anthropic SDK.
+
+**Setup:**
+```bash
+# Get API key from https://console.anthropic.com/
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
+```
+
+**Usage:**
+```typescript
+import { AssistantAgent } from 'autogen_node';
+
+const agent = new AssistantAgent({
+  name: 'assistant',
+  provider: 'anthropic',
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+  model: 'claude-3-5-sonnet-20241022',
+  temperature: 0.7,
+  maxTokens: 1000
+});
+```
+
+**Available Models:**
+- `claude-3-5-sonnet-20241022` - Best balance of speed and capability
+- `claude-3-opus-20240229` - Most capable, highest intelligence
+- `claude-3-haiku-20240307` - Fastest, most cost-effective
+
+**Benefits:**
+- Native Anthropic SDK integration
+- Full support for Claude's advanced features
+- Tool/function calling support
+- Large context windows (up to 200K tokens)
+- Strong reasoning and coding capabilities
+
+### 5. Google Gemini
+Use Google's Gemini models via the official Google Generative AI SDK.
+
+**Setup:**
+```bash
+# Get API key from https://makersuite.google.com/app/apikey
+export GEMINI_API_KEY=your-gemini-key-here
+```
+
+**Usage:**
+```typescript
+import { AssistantAgent } from 'autogen_node';
+
+const agent = new AssistantAgent({
+  name: 'assistant',
+  provider: 'gemini',
+  apiKey: process.env.GEMINI_API_KEY!,
+  model: 'gemini-1.5-flash',
+  temperature: 0.7,
+  maxTokens: 1000
+});
+```
+
+**Available Models:**
+- `gemini-1.5-flash` - Fast and efficient, cost-effective
+- `gemini-1.5-pro` - More capable, balanced performance
+- `gemini-pro` - Standard model
+
+**Benefits:**
+- Native Google Generative AI SDK integration
+- Fast response times
+- Competitive pricing
+- Function calling support
+- Large context windows
+- Multimodal capabilities
+
 ## Provider Comparison
 
-| Feature | OpenAI | OpenRouter | Ollama |
-|---------|--------|------------|--------|
-| **API Key Required** | ✅ Yes | ✅ Yes | ❌ No |
-| **Cost** | Pay per token | Pay per token | Free (local) |
-| **Internet Required** | ✅ Yes | ✅ Yes | ❌ No |
-| **Privacy** | Cloud | Cloud | Local |
-| **Speed** | Fast | Fast | Depends on hardware |
-| **Model Selection** | OpenAI only | 100+ models | 50+ models |
-| **Setup Difficulty** | Easy | Easy | Medium |
-| **Best For** | Production, OpenAI models | Multi-model access | Privacy, offline use |
+| Feature | OpenAI | OpenRouter | Ollama | Anthropic | Gemini |
+|---------|--------|------------|--------|-----------|--------|
+| **API Key Required** | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
+| **Cost** | Pay per token | Pay per token | Free (local) | Pay per token | Pay per token |
+| **Internet Required** | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
+| **Privacy** | Cloud | Cloud | Local | Cloud | Cloud |
+| **Speed** | Fast | Fast | Depends on hardware | Fast | Very Fast |
+| **Model Selection** | OpenAI only | 100+ models | 50+ models | Claude models | Gemini models |
+| **Setup Difficulty** | Easy | Easy | Medium | Easy | Easy |
+| **Function Calling** | ✅ Yes | ✅ Yes | Limited | ✅ Yes | ✅ Yes |
+| **Best For** | Production, OpenAI models | Multi-model access | Privacy, offline use | Advanced reasoning | Fast, cost-effective |
 
 ## Examples
 
@@ -159,6 +231,22 @@ const claudeAgent = new AssistantAgent({
   provider: 'openrouter',
   apiKey: process.env.OPENROUTER_API_KEY!,
   model: 'anthropic/claude-2'
+});
+
+// Native Anthropic agent
+const anthropicAgent = new AssistantAgent({
+  name: 'anthropic_assistant',
+  provider: 'anthropic',
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+  model: 'claude-3-5-sonnet-20241022'
+});
+
+// Google Gemini agent
+const geminiAgent = new AssistantAgent({
+  name: 'gemini_assistant',
+  provider: 'gemini',
+  apiKey: process.env.GEMINI_API_KEY!,
+  model: 'gemini-1.5-flash'
 });
 
 // Local Ollama agent
@@ -241,17 +329,25 @@ async function createResilientAgent(name: string): Promise<AssistantAgent> {
 ## Running the Examples
 
 ```bash
+# OpenAI example (original)
+export OPENAI_API_KEY=sk-your-key
+npm run example:auto
+
 # OpenRouter example
 export OPENROUTER_API_KEY=sk-or-v1-your-key
 npm run example:openrouter
 
+# Anthropic example
+export ANTHROPIC_API_KEY=sk-ant-your-key
+npm run example:anthropic
+
+# Gemini example
+export GEMINI_API_KEY=your-gemini-key
+npm run example:gemini
+
 # Ollama example (requires Ollama installed)
 ollama pull llama2
 npm run example:ollama
-
-# Original OpenAI example still works
-export OPENAI_API_KEY=sk-your-key
-npm run example:auto
 ```
 
 ## Configuration Reference
@@ -261,8 +357,8 @@ npm run example:auto
 ```typescript
 interface AssistantAgentConfig {
   name: string;                      // Agent name
-  provider?: 'openai' | 'openrouter' | 'ollama';  // LLM provider (default: 'openai')
-  apiKey?: string;                   // API key (required for openai/openrouter)
+  provider?: 'openai' | 'openrouter' | 'ollama' | 'anthropic' | 'gemini';  // LLM provider (default: 'openai')
+  apiKey?: string;                   // API key (required for openai/openrouter/anthropic/gemini)
   model?: string;                    // Model name
   baseURL?: string;                  // Custom base URL (optional)
   temperature?: number;              // 0.0 to 1.0 (default: 0)
@@ -307,6 +403,43 @@ curl https://openrouter.ai/api/v1/auth/key \
 - Check model name format: `provider/model`
 - See available models: https://openrouter.ai/docs#models
 
+### Anthropic Issues
+
+**Problem:** "Invalid API key"
+```bash
+# Solution: Check your API key
+curl https://api.anthropic.com/v1/messages \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "content-type: application/json" \
+  -d '{"model":"claude-3-5-sonnet-20241022","max_tokens":10,"messages":[{"role":"user","content":"Hi"}]}'
+```
+
+**Problem:** Model not found
+- Check model name is correct (e.g., `claude-3-5-sonnet-20241022`, not `claude-3.5-sonnet`)
+- See available models: https://docs.anthropic.com/claude/docs/models-overview
+
+**Problem:** Rate limits or quota exceeded
+- Check your plan limits at https://console.anthropic.com/
+- Implement retry logic with exponential backoff
+
+### Gemini Issues
+
+**Problem:** "API key not valid"
+```bash
+# Solution: Verify your API key at Google AI Studio
+# Visit: https://makersuite.google.com/app/apikey
+```
+
+**Problem:** Model not found
+- Check model name (e.g., `gemini-1.5-flash`, `gemini-1.5-pro`)
+- See available models: https://ai.google.dev/models/gemini
+
+**Problem:** "Resource has been exhausted"
+- You've hit the rate limit
+- Wait a moment and try again
+- Consider upgrading your quota
+
 ### Ollama Issues
 
 **Problem:** "ECONNREFUSED" or "Connection refused"
@@ -332,17 +465,25 @@ ollama list  # See installed models
 
 ## Best Practices
 
-1. **Development**: Use Ollama for fast, free local testing
-2. **Production**: Use OpenAI or OpenRouter for reliability
+1. **Development**: Use Ollama for fast, free local testing or Gemini for cost-effective cloud testing
+2. **Production**: Use OpenAI, Anthropic, or Gemini for reliability
 3. **Privacy-Sensitive**: Use Ollama exclusively
-4. **Cost Optimization**: Use OpenRouter to access cheaper models
+4. **Cost Optimization**: Use Gemini or OpenRouter to access cheaper models
 5. **Experimentation**: Use OpenRouter to try different models
+6. **Advanced Reasoning**: Use Anthropic Claude for complex analytical tasks
+7. **Speed Priority**: Use Gemini Flash or Claude Haiku for fastest responses
 
 ## Next Steps
 
-- Try the examples: `npm run example:openrouter` or `npm run example:ollama`
+- Try the examples:
+  - `npm run example:anthropic` - Anthropic Claude
+  - `npm run example:gemini` - Google Gemini
+  - `npm run example:openrouter` - OpenRouter
+  - `npm run example:ollama` - Local Ollama
 - Read provider documentation:
   - [OpenAI](https://platform.openai.com/docs)
+  - [Anthropic](https://docs.anthropic.com/)
+  - [Google Gemini](https://ai.google.dev/docs)
   - [OpenRouter](https://openrouter.ai/docs)
   - [Ollama](https://ollama.ai)
 - Explore available models for each provider

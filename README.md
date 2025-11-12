@@ -9,8 +9,10 @@ This project brings the powerful multi-agent orchestration capabilities of Micro
 ## Features
 
 - **Base Agent Framework**: Core interfaces and abstract classes for building custom agents
-- **Multiple LLM Providers**: Support for OpenAI, OpenRouter, and Ollama
+- **Multiple LLM Providers**: Support for OpenAI, OpenRouter, Ollama, Anthropic, and Google Gemini
   - **OpenAI**: GPT-3.5, GPT-4, and other OpenAI models
+  - **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, and Claude 3 Haiku
+  - **Google Gemini**: Gemini 1.5 Flash, Gemini 1.5 Pro, and Gemini Pro
   - **OpenRouter**: Access to 100+ models from multiple providers
   - **Ollama**: Run LLMs locally for privacy and offline use
 - **AssistantAgent**: LLM-powered conversational agent with provider flexibility
@@ -67,6 +69,30 @@ const assistant = new AssistantAgent({
   provider: 'openrouter',
   apiKey: process.env.OPENROUTER_API_KEY!,
   model: 'anthropic/claude-2',
+  temperature: 0.7
+});
+```
+
+### Using Anthropic Claude
+
+```typescript
+const assistant = new AssistantAgent({
+  name: 'assistant',
+  provider: 'anthropic',
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+  model: 'claude-3-5-sonnet-20241022',
+  temperature: 0.7
+});
+```
+
+### Using Google Gemini
+
+```typescript
+const assistant = new AssistantAgent({
+  name: 'assistant',
+  provider: 'gemini',
+  apiKey: process.env.GEMINI_API_KEY!,
+  model: 'gemini-1.5-flash',
   temperature: 0.7
 });
 ```
@@ -176,6 +202,8 @@ Create a `.env` file in the project root:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here  # Optional
+GEMINI_API_KEY=your_gemini_api_key_here        # Optional
 OPENROUTER_API_KEY=your_openrouter_api_key_here  # Optional
 # OLLAMA_BASE_URL=http://localhost:11434/v1      # Optional
 ```
@@ -194,6 +222,12 @@ npm run example:auto
 
 # Run the group chat example (OpenAI)
 npm run example:group
+
+# Run Anthropic Claude example
+npm run example:anthropic
+
+# Run Google Gemini example
+npm run example:gemini
 
 # Run OpenRouter example
 npm run example:openrouter
@@ -367,7 +401,7 @@ await manager.runChat('Design a new mobile app feature');
 | UserProxyAgent | ✅ | ✅ |
 | OpenAI Integration | ✅ | ✅ |
 | Group Chat | ✅ | ✅ |
-| Multiple LLM Providers | ✅ | ✅ (OpenAI, OpenRouter, Ollama) |
+| Multiple LLM Providers | ✅ | ✅ (OpenAI, Anthropic, Gemini, OpenRouter, Ollama) |
 | Function Calling | ✅ | ✅ |
 | Code Execution | ✅ | ✅ (JavaScript, Python, Bash) |
 
@@ -380,7 +414,7 @@ await manager.runChat('Design a new mobile app feature');
 - [x] Multiple LLM provider support (OpenAI, OpenRouter, Ollama)
 - [x] Function calling support
 - [x] Code execution agent (JavaScript, Python, Bash)
-- [ ] Additional LLM provider integrations (Anthropic SDK, Google Gemini, etc.)
+- [x] Additional LLM provider integrations (Anthropic SDK, Google Gemini)
 - [ ] Advanced conversation patterns
 - [ ] Streaming responses
 - [ ] Performance optimizations
