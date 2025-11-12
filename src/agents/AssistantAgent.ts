@@ -1,13 +1,13 @@
 import { BaseAgent } from '../core/BaseAgent';
 import { IMessage, IAgentConfig } from '../core/IAgent';
-import { ILLMProvider, OpenAIProvider, OpenRouterProvider, OllamaProvider } from '../providers';
+import { ILLMProvider, OpenAIProvider, OpenRouterProvider, OllamaProvider, AnthropicProvider, GeminiProvider } from '../providers';
 import { IFunction, IFunctionDefinition } from '../core/IFunctionCall';
 import { FunctionCallMiddleware } from '../core/FunctionCallMiddleware';
 
 /**
  * LLM Provider types
  */
-export type LLMProviderType = 'openai' | 'openrouter' | 'ollama';
+export type LLMProviderType = 'openai' | 'openrouter' | 'ollama' | 'anthropic' | 'gemini';
 
 /**
  * Configuration for Assistant Agent with LLM provider
@@ -76,6 +76,10 @@ export class AssistantAgent extends BaseAgent {
         return 'openai/gpt-3.5-turbo';
       case 'ollama':
         return 'llama2';
+      case 'anthropic':
+        return 'claude-3-5-sonnet-20241022';
+      case 'gemini':
+        return 'gemini-1.5-flash';
       default:
         return 'gpt-3.5-turbo';
     }
@@ -104,6 +108,10 @@ export class AssistantAgent extends BaseAgent {
         return new OpenRouterProvider(config);
       case 'ollama':
         return new OllamaProvider(config);
+      case 'anthropic':
+        return new AnthropicProvider(config);
+      case 'gemini':
+        return new GeminiProvider(config);
       default:
         throw new Error(`Unsupported provider: ${type}`);
     }
