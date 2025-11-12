@@ -1,0 +1,32 @@
+{
+  "name": "AutoGen Node.js Development",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-18-bullseye",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "orta.vscode-jest"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  "postCreateCommand": "npm install",
+  
+  "forwardPorts": [],
+  
+  "remoteUser": "node"
+}
