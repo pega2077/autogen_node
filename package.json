@@ -12,6 +12,8 @@
     "example:group": "ts-node src/examples/group-chat.ts",
     "example:openrouter": "ts-node src/examples/openrouter-example.ts",
     "example:ollama": "ts-node src/examples/ollama-example.ts",
+    "example:anthropic": "ts-node src/examples/anthropic-example.ts",
+    "example:gemini": "ts-node src/examples/gemini-example.ts",
     "example:functions": "ts-node src/examples/function-calling-example.ts",
     "example:code": "ts-node src/examples/code-execution-example.ts",
     "test": "jest",
@@ -41,6 +43,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.2.3",
     "openai": "^6.8.1"
   }

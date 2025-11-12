@@ -30,7 +30,9 @@ export {
   LLMProviderConfig,
   OpenAIProvider,
   OpenRouterProvider,
-  OllamaProvider
+  OllamaProvider,
+  AnthropicProvider,
+  GeminiProvider
 } from './providers';
 
 // Agent implementations
