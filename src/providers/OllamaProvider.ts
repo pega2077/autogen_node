@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { IMessage } from '../core/IAgent';
 import { ILLMProvider, LLMProviderConfig } from './ILLMProvider';
+import { IFunctionDefinition } from '../core/IFunctionCall';
 
 /**
  * Ollama provider implementation
@@ -25,11 +26,7 @@ export class OllamaProvider implements ILLMProvider {
     messages: IMessage[],
     cancellationToken?: AbortSignal
   ): Promise<string> {
-    const ollamaMessages = messages.map(msg => ({
-      role: msg.role as 'user' | 'assistant' | 'system',
-      content: msg.content,
-      ...(msg.name && { name: msg.name })
-    }));
+    const ollamaMessages = this.convertMessages(messages);
 
     const response = await this.client.chat.completions.create({
       model: this.config.model,
@@ -41,6 +38,85 @@ export class OllamaProvider implements ILLMProvider {
     });
 
     return response.choices[0]?.message?.content || '';
+  }
+
+  async generateReplyWithFunctions(
+    messages: IMessage[],
+    tools?: IFunctionDefinition[],
+    cancellationToken?: AbortSignal
+  ): Promise<IMessage> {
+    const ollamaMessages = this.convertMessages(messages);
+
+    const requestParams: any = {
+      model: this.config.model,
+      messages: ollamaMessages,
+      temperature: this.config.temperature ?? 0
+    };
+
+    if (this.config.maxTokens) {
+      requestParams.max_tokens = this.config.maxTokens;
+    }
+
+    // Note: Ollama's function calling support varies by model
+    // Some newer models support it, some don't
+    if (tools && tools.length > 0) {
+      requestParams.tools = tools;
+      requestParams.tool_choice = 'auto';
+    }
+
+    const response = await this.client.chat.completions.create(
+      requestParams,
+      { signal: cancellationToken }
+    );
+
+    const choice = response.choices[0];
+    const message = choice?.message;
+
+    if (!message) {
+      throw new Error('No message in response');
+    }
+
+    const result: IMessage = {
+      role: 'assistant',
+      content: message.content || ''
+    };
+
+    // Handle tool calls if supported
+    if (message.tool_calls && message.tool_calls.length > 0) {
+      result.toolCalls = message.tool_calls.map((tc: any) => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: {
+          name: tc.function.name,
+          arguments: tc.function.arguments
+        }
+      }));
+    }
+
+    return result;
+  }
+
+  private convertMessages(messages: IMessage[]): OpenAI.Chat.ChatCompletionMessageParam[] {
+    return messages.map(msg => {
+      const base: any = {
+        role: msg.role,
+        content: msg.content
+      };
+
+      if (msg.name) {
+        base.name = msg.name;
+      }
+
+      if (msg.toolCallId) {
+        base.tool_call_id = msg.toolCallId;
+      }
+
+      if (msg.toolCalls) {
+        base.tool_calls = msg.toolCalls;
+      }
+
+      return base;
+    });
   }
 
   getProviderName(): string {

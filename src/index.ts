@@ -3,6 +3,27 @@ export { IAgent, IMessage, IAgentConfig } from './core/IAgent';
 export { BaseAgent } from './core/BaseAgent';
 export { GroupChat, GroupChatManager, GroupChatConfig, GroupChatManagerConfig } from './core/GroupChat';
 
+// Function calling
+export {
+  IFunctionContract,
+  IFunctionParameter,
+  IFunctionCall,
+  IFunctionResult,
+  IFunctionDefinition,
+  IFunction,
+  FunctionExecutor
+} from './core/IFunctionCall';
+export { FunctionContract } from './core/FunctionContract';
+export { FunctionCallMiddleware } from './core/FunctionCallMiddleware';
+
+// Code execution
+export {
+  ICodeExecutor,
+  ICodeExecutionResult,
+  ICodeBlock
+} from './core/ICodeExecutor';
+export { LocalCodeExecutor } from './executors/LocalCodeExecutor';
+
 // LLM Providers
 export { 
   ILLMProvider, 

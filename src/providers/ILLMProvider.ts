@@ -1,4 +1,5 @@
 import { IMessage } from '../core/IAgent';
+import { IFunctionDefinition } from '../core/IFunctionCall';
 
 /**
  * Configuration for LLM provider
@@ -9,6 +10,7 @@ export interface LLMProviderConfig {
   maxTokens?: number;
   apiKey?: string;
   baseURL?: string;
+  tools?: IFunctionDefinition[];
 }
 
 /**
@@ -22,6 +24,15 @@ export interface ILLMProvider {
     messages: IMessage[],
     cancellationToken?: AbortSignal
   ): Promise<string>;
+
+  /**
+   * Generate a reply with potential function calls
+   */
+  generateReplyWithFunctions(
+    messages: IMessage[],
+    tools?: IFunctionDefinition[],
+    cancellationToken?: AbortSignal
+  ): Promise<IMessage>;
 
   /**
    * Get the provider name

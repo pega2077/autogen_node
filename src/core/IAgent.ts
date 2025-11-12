@@ -1,14 +1,25 @@
+import { IFunctionCall, IFunctionResult } from './IFunctionCall';
+
 /**
  * Represents a message in the agent communication system
  */
 export interface IMessage {
   content: string;
-  role: 'user' | 'assistant' | 'system' | 'function';
+  role: 'user' | 'assistant' | 'system' | 'function' | 'tool';
   name?: string;
   functionCall?: {
     name: string;
     arguments: string;
   };
+  toolCalls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+  toolCallId?: string;
 }
 
 /**
