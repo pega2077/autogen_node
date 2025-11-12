@@ -1,0 +1,37 @@
+{
+  "name": "autogen_node",
+  "version": "0.1.0",
+  "description": "Node.js version of microsoft/autogen - A framework for building multi-agent AI systems",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/examples/basic-chat.ts",
+    "example:basic": "ts-node src/examples/basic-chat.ts",
+    "example:auto": "ts-node src/examples/automated-chat.ts",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "autogen",
+    "ai",
+    "agent",
+    "multi-agent",
+    "openai",
+    "gpt",
+    "chatbot",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "openai": "^6.8.1"
+  }
+}
