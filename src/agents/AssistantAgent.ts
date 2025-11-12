@@ -1,6 +1,8 @@
 import { BaseAgent } from '../core/BaseAgent';
 import { IMessage, IAgentConfig } from '../core/IAgent';
 import { ILLMProvider, OpenAIProvider, OpenRouterProvider, OllamaProvider } from '../providers';
+import { IFunction, IFunctionDefinition } from '../core/IFunctionCall';
+import { FunctionCallMiddleware } from '../core/FunctionCallMiddleware';
 
 /**
  * LLM Provider types
@@ -17,6 +19,7 @@ export interface AssistantAgentConfig extends IAgentConfig {
   temperature?: number;
   maxTokens?: number;
   baseURL?: string;
+  functions?: IFunction[];
 }
 
 /**
@@ -38,6 +41,7 @@ export class AssistantAgent extends BaseAgent {
   private model: string;
   private temperature: number;
   private maxTokens: number;
+  private functionMiddleware?: FunctionCallMiddleware;
 
   constructor(config: AssistantAgentConfig) {
     super(config);
@@ -54,6 +58,11 @@ export class AssistantAgent extends BaseAgent {
       config.apiKey,
       config.baseURL
     );
+
+    // Set up function calling if functions are provided
+    if (config.functions && config.functions.length > 0) {
+      this.functionMiddleware = new FunctionCallMiddleware(config.functions);
+    }
   }
 
   /**
@@ -108,6 +117,42 @@ export class AssistantAgent extends BaseAgent {
     cancellationToken?: AbortSignal
   ): Promise<IMessage> {
     try {
+      // If we have functions registered, use function calling
+      if (this.functionMiddleware && this.functionMiddleware.getFunctions().length > 0) {
+        const tools = this.getFunctionDefinitions();
+        const reply = await this.llmProvider.generateReplyWithFunctions(
+          messages,
+          tools,
+          cancellationToken
+        );
+        
+        reply.name = this.name;
+        this.addToHistory(reply);
+        
+        // If the reply contains tool calls, execute them and continue
+        if (this.functionMiddleware.hasToolCalls(reply)) {
+          const functionResults = await this.functionMiddleware.processToolCalls(reply);
+          
+          // Add function results to history
+          functionResults.forEach(result => this.addToHistory(result));
+          
+          // Generate a follow-up response with function results
+          const allMessages = [...messages, reply, ...functionResults];
+          const finalReply = await this.llmProvider.generateReplyWithFunctions(
+            allMessages,
+            tools,
+            cancellationToken
+          );
+          
+          finalReply.name = this.name;
+          this.addToHistory(finalReply);
+          return finalReply;
+        }
+        
+        return reply;
+      }
+      
+      // Otherwise, use standard completion
       const content = await this.llmProvider.generateCompletion(
         messages,
         cancellationToken
@@ -151,5 +196,89 @@ export class AssistantAgent extends BaseAgent {
    */
   getProviderName(): string {
     return this.llmProvider.getProviderName();
+  }
+
+  /**
+   * Register a function for this agent
+   */
+  registerFunction(fn: IFunction): void {
+    if (!this.functionMiddleware) {
+      this.functionMiddleware = new FunctionCallMiddleware();
+    }
+    this.functionMiddleware.registerFunction(fn);
+  }
+
+  /**
+   * Unregister a function
+   */
+  unregisterFunction(name: string): void {
+    this.functionMiddleware?.unregisterFunction(name);
+  }
+
+  /**
+   * Get all registered functions
+   */
+  getFunctions(): IFunction[] {
+    return this.functionMiddleware?.getFunctions() || [];
+  }
+
+  /**
+   * Get function definitions for LLM provider
+   */
+  getFunctionDefinitions(): IFunctionDefinition[] {
+    if (!this.functionMiddleware) {
+      return [];
+    }
+
+    const functions = this.functionMiddleware.getFunctions();
+    return functions.map(fn => {
+      // Convert to OpenAI format
+      const properties: Record<string, any> = {};
+      const required: string[] = [];
+
+      if (fn.contract.parameters) {
+        for (const param of fn.contract.parameters) {
+          properties[param.name] = {
+            type: param.type,
+            description: param.description
+          };
+
+          if (param.type === 'object' && param.properties) {
+            properties[param.name].properties = param.properties;
+          }
+
+          if (param.type === 'array' && param.items) {
+            properties[param.name].items = param.items;
+          }
+
+          if (param.required) {
+            required.push(param.name);
+          }
+        }
+      }
+
+      return {
+        type: 'function',
+        function: {
+          name: fn.contract.name,
+          description: fn.contract.description,
+          parameters: {
+            type: 'object',
+            properties,
+            required: required.length > 0 ? required : undefined
+          }
+        }
+      };
+    });
+  }
+
+  /**
+   * Process function calls in a message
+   */
+  async processFunctionCalls(message: IMessage): Promise<IMessage[]> {
+    if (!this.functionMiddleware) {
+      return [];
+    }
+    return this.functionMiddleware.processToolCalls(message);
   }
 }
