@@ -2,6 +2,12 @@
 export { IAgent, IMessage, IAgentConfig, StreamingChunk } from './core/IAgent';
 export { BaseAgent } from './core/BaseAgent';
 export { GroupChat, GroupChatManager, GroupChatConfig, GroupChatManagerConfig } from './core/GroupChat';
+export { 
+  INestedChatAgent, 
+  NestedChatOptions, 
+  NestedChatResult, 
+  supportsNestedChat 
+} from './core/INestedChat';
 
 // Memory
 export {
