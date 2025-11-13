@@ -8,6 +8,14 @@ export {
   NestedChatResult, 
   supportsNestedChat 
 } from './core/INestedChat';
+export {
+  SequentialChatStep,
+  SequentialChatConfig,
+  SequentialChatStepResult,
+  SequentialChatResult,
+  runSequentialChat,
+  summarizeSequentialChat
+} from './core/SequentialChat';
 
 // Memory
 export {

@@ -19,6 +19,7 @@
     "example:memory": "ts-node src/examples/memory-example.ts",
     "example:streaming": "ts-node src/examples/streaming-example.ts",
     "example:nested": "ts-node src/examples/nested-chat-example.ts",
+    "example:sequential": "ts-node src/examples/sequential-chat-example.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
