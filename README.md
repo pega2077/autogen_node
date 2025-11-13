@@ -8,6 +8,12 @@ This project brings the powerful multi-agent orchestration capabilities of Micro
 
 ## Features
 
+- **Event-Driven Architecture (AutoGen v0.4)**: Asynchronous message passing and distributed agent systems
+  - **AgentRuntime**: Core runtime for hosting and managing agents
+  - **Direct Messaging**: Send messages between agents asynchronously
+  - **Publish/Subscribe**: Topic-based broadcast messaging
+  - **Cancellation Tokens**: Control and cancel async operations
+  - **State Management**: Persist and restore runtime state
 - **Base Agent Framework**: Core interfaces and abstract classes for building custom agents
 - **Multiple LLM Providers**: Support for OpenAI, OpenRouter, Ollama, Anthropic, and Google Gemini
   - **OpenAI**: GPT-3.5, GPT-4, and other OpenAI models
@@ -146,9 +152,29 @@ autogen_node/
 
 ## Architecture
 
-This implementation follows the .NET AutoGen architecture:
+This implementation follows the AutoGen architecture with both traditional and event-driven patterns:
 
-### Core Components
+### Event-Driven Architecture (AutoGen v0.4)
+
+The new event-driven architecture enables scalable, distributed multi-agent systems:
+
+1. **AgentRuntime**: Core runtime for hosting and managing agents
+   - `sendMessage()`: Direct asynchronous message passing
+   - `publishMessage()`: Topic-based broadcast messaging
+   - Agent registration and lifecycle management
+   - State persistence and restoration
+
+2. **AgentId & TopicId**: Distributed agent addressing
+   - Unique identification for agents across processes
+   - Topic-based message routing
+
+3. **CancellationToken**: Async operation control
+   - Cancel long-running operations
+   - Cleanup on cancellation
+
+See [EVENT_DRIVEN.md](./EVENT_DRIVEN.md) for detailed documentation.
+
+### Traditional Architecture
 
 1. **IAgent Interface**: Defines the contract for all agents
    - `generateReply()`: Generate responses to messages
@@ -245,6 +271,9 @@ npm run example:code
 # Run memory example
 npm run example:memory
 
+# Run event-driven architecture example (AutoGen v0.4)
+npm run example:events
+
 # Run tests
 npm test
 
@@ -259,6 +288,52 @@ npm run clean
 ```
 
 ## Examples
+
+### Event-Driven Architecture (AutoGen v0.4)
+
+```typescript
+import {
+  AgentId,
+  TopicId,
+  SingleThreadedAgentRuntime,
+  createSubscription,
+} from './src/index';
+
+// Create event-driven agent
+class EventAgent {
+  async handleMessage(message: any, sender: AgentId | null) {
+    return {
+      role: 'assistant',
+      content: `Processed: ${message.content}`,
+    };
+  }
+}
+
+// Create runtime and register agents
+const runtime = new SingleThreadedAgentRuntime();
+const agent = new EventAgent();
+const agentId = new AgentId('event_agent', 'agent1');
+
+await runtime.registerAgentInstance(agent, agentId);
+
+// Direct message passing
+const response = await runtime.sendMessage(
+  { content: 'Hello!' },
+  agentId
+);
+
+// Topic-based pub/sub
+const topic = new TopicId('notifications', 'system');
+await runtime.addSubscription(
+  createSubscription('sub1', topic, agentId)
+);
+await runtime.publishMessage(
+  { content: 'Broadcast message' },
+  topic
+);
+```
+
+See [EVENT_DRIVEN.md](./EVENT_DRIVEN.md) for complete documentation.
 
 ### Basic Two-Agent Chat
 
@@ -447,6 +522,10 @@ For more details, see [MEMORY.md](MEMORY.md).
 | Function Calling | ✅ | ✅ |
 | Code Execution | ✅ | ✅ (JavaScript, Python, Bash) |
 | Memory System | ✅ | ✅ (Based on Python AutoGen) |
+| Event-Driven Architecture (v0.4) | ✅ | ✅ |
+| AgentRuntime | ✅ | ✅ (SingleThreadedAgentRuntime) |
+| Async Message Passing | ✅ | ✅ |
+| Publish/Subscribe | ✅ | ✅ |
 
 ## Roadmap
 
@@ -459,6 +538,15 @@ For more details, see [MEMORY.md](MEMORY.md).
 - [x] Code execution agent (JavaScript, Python, Bash)
 - [x] Additional LLM provider integrations (Anthropic SDK, Google Gemini)
 - [x] Memory system (ListMemory implementation)
+- [x] Event-driven architecture (AutoGen v0.4)
+  - [x] AgentRuntime interface
+  - [x] SingleThreadedAgentRuntime implementation
+  - [x] AgentId and TopicId for addressing
+  - [x] CancellationToken for async control
+  - [x] Direct message passing (sendMessage)
+  - [x] Publish/Subscribe messaging (publishMessage)
+  - [x] State persistence and management
+  - [ ] Distributed runtime (multi-process/multi-machine)
 - [ ] Advanced conversation patterns
 - [ ] Streaming responses
 - [ ] Performance optimizations
