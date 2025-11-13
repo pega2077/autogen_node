@@ -1,10 +1,11 @@
 import { IAgent, IMessage, IAgentConfig } from './IAgent';
 import { IMemory } from './memory';
+import { INestedChatAgent, NestedChatOptions, NestedChatResult } from './INestedChat';
 
 /**
  * Base class for all conversable agents
  */
-export abstract class BaseAgent implements IAgent {
+export abstract class BaseAgent implements IAgent, INestedChatAgent {
   public name: string;
   protected systemMessage: string;
   protected conversationHistory: IMessage[];
@@ -173,5 +174,86 @@ export abstract class BaseAgent implements IAgent {
    */
   clearMemory(): void {
     this.memory = [];
+  }
+
+  /**
+   * Start a nested conversation with another agent
+   * This allows an agent to delegate tasks to another agent in a separate conversation context
+   * 
+   * @param message - Initial message for the nested chat
+   * @param recipient - Agent to chat with in the nested conversation
+   * @param options - Options for the nested chat
+   * @returns Result of the nested conversation including all messages
+   */
+  async initiateNestedChat(
+    message: string | IMessage,
+    recipient: IAgent,
+    options?: NestedChatOptions
+  ): Promise<NestedChatResult> {
+    const {
+      maxRounds = 10,
+      addToParentHistory = false,
+      terminationMessage = 'TERMINATE'
+    } = options || {};
+
+    const nestedMessages: IMessage[] = [];
+    const msg: IMessage = typeof message === 'string'
+      ? { role: 'user', content: message, name: this.name }
+      : { ...message, name: this.name };
+
+    // Add initial message to nested chat history
+    nestedMessages.push(msg);
+
+    let rounds = 0;
+    let terminated = false;
+
+    while (rounds < maxRounds) {
+      // Get reply from recipient in the nested context
+      // Pass only the nested messages, not the parent's history
+      const reply = await recipient.generateReply([...nestedMessages]);
+      nestedMessages.push(reply);
+      rounds++;
+
+      // Check for termination
+      if (this.isTerminationMessage(reply) || 
+          reply.content.includes(terminationMessage)) {
+        terminated = true;
+        break;
+      }
+
+      // If this agent needs to respond in the nested chat, generate a reply
+      // We generate a reply but don't let it affect the parent's conversation history
+      if (rounds < maxRounds) {
+        // Generate reply in the nested context
+        const myReply = await this.generateReply([...nestedMessages]);
+        nestedMessages.push(myReply);
+
+        // Check if we should terminate
+        if (this.isTerminationMessage(myReply) || 
+            myReply.content.includes(terminationMessage)) {
+          terminated = true;
+          break;
+        }
+      }
+    }
+
+    const finalMessage = nestedMessages[nestedMessages.length - 1];
+
+    // Optionally add nested conversation summary to parent history
+    if (addToParentHistory) {
+      const summary: IMessage = {
+        role: 'assistant',
+        content: `[Nested conversation with ${recipient.getName()}]\nResult: ${finalMessage.content}`,
+        name: this.name
+      };
+      this.addToHistory(summary);
+    }
+
+    return {
+      messages: nestedMessages,
+      finalMessage,
+      rounds,
+      terminated
+    };
   }
 }

@@ -1,7 +1,27 @@
 // Core interfaces and base classes
-export { IAgent, IMessage, IAgentConfig } from './core/IAgent';
+export { IAgent, IMessage, IAgentConfig, StreamingChunk } from './core/IAgent';
 export { BaseAgent } from './core/BaseAgent';
 export { GroupChat, GroupChatManager, GroupChatConfig, GroupChatManagerConfig } from './core/GroupChat';
+export { 
+  INestedChatAgent, 
+  NestedChatOptions, 
+  NestedChatResult, 
+  supportsNestedChat 
+} from './core/INestedChat';
+export {
+  SequentialChatStep,
+  SequentialChatConfig,
+  SequentialChatStepResult,
+  SequentialChatResult,
+  runSequentialChat,
+  summarizeSequentialChat
+} from './core/SequentialChat';
+export {
+  ContextManager,
+  ContextManagerConfig,
+  CompressionStrategy,
+  CompressionResult
+} from './core/ContextManager';
 
 // Memory
 export {
@@ -40,6 +60,7 @@ export { LocalCodeExecutor } from './executors/LocalCodeExecutor';
 export { 
   ILLMProvider, 
   LLMProviderConfig,
+  StreamingChunk as ProviderStreamingChunk,
   OpenAIProvider,
   OpenRouterProvider,
   OllamaProvider,

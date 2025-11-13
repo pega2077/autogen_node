@@ -1,5 +1,5 @@
 import { BaseAgent } from '../core/BaseAgent';
-import { IMessage, IAgentConfig } from '../core/IAgent';
+import { IMessage, IAgentConfig, StreamingChunk } from '../core/IAgent';
 import { ILLMProvider, OpenAIProvider, OpenRouterProvider, OllamaProvider, AnthropicProvider, GeminiProvider } from '../providers';
 import { IFunction, IFunctionDefinition } from '../core/IFunctionCall';
 import { FunctionCallMiddleware } from '../core/FunctionCallMiddleware';
@@ -291,5 +291,34 @@ export class AssistantAgent extends BaseAgent {
       return [];
     }
     return this.functionMiddleware.processToolCalls(message);
+  }
+
+  /**
+   * Generate a streaming reply
+   * Note: Function calling is not supported in streaming mode
+   */
+  async* generateReplyStream(
+    messages: IMessage[],
+    cancellationToken?: AbortSignal
+  ): AsyncIterableIterator<StreamingChunk> {
+    try {
+      // Apply memory to messages before processing
+      const messagesWithMemory = await this.applyMemoryToMessages(messages);
+
+      // Check if provider supports streaming
+      if (!this.llmProvider.generateStreamingCompletion) {
+        throw new Error(`Provider ${this.llmProvider.getProviderName()} does not support streaming`);
+      }
+
+      // Generate streaming completion
+      for await (const chunk of this.llmProvider.generateStreamingCompletion(messagesWithMemory, cancellationToken)) {
+        yield chunk;
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to generate streaming reply: ${error.message}`);
+      }
+      throw error;
+    }
   }
 }
