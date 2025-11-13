@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { IMessage } from '../core/IAgent';
-import { ILLMProvider, LLMProviderConfig } from './ILLMProvider';
+import { ILLMProvider, LLMProviderConfig, StreamingChunk } from './ILLMProvider';
 import { IFunctionDefinition } from '../core/IFunctionCall';
 
 /**
@@ -97,6 +97,36 @@ export class OpenAIProvider implements ILLMProvider {
     }
 
     return result;
+  }
+
+  /**
+   * Generate a streaming completion
+   */
+  async* generateStreamingCompletion(
+    messages: IMessage[],
+    cancellationToken?: AbortSignal
+  ): AsyncIterableIterator<StreamingChunk> {
+    const openAIMessages = this.convertMessages(messages);
+
+    const stream = await this.client.chat.completions.create({
+      model: this.config.model,
+      messages: openAIMessages,
+      temperature: this.config.temperature ?? 0,
+      max_tokens: this.config.maxTokens || 1000,
+      stream: true
+    }, {
+      signal: cancellationToken
+    });
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content || '';
+      const isComplete = chunk.choices[0]?.finish_reason !== null;
+      
+      yield {
+        delta,
+        isComplete
+      };
+    }
   }
 
   private convertMessages(messages: IMessage[]): OpenAI.Chat.ChatCompletionMessageParam[] {

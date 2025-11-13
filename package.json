@@ -17,6 +17,7 @@
     "example:functions": "ts-node src/examples/function-calling-example.ts",
     "example:code": "ts-node src/examples/code-execution-example.ts",
     "example:memory": "ts-node src/examples/memory-example.ts",
+    "example:streaming": "ts-node src/examples/streaming-example.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

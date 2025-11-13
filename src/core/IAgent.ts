@@ -24,6 +24,14 @@ export interface IMessage {
 }
 
 /**
+ * Streaming response chunk
+ */
+export interface StreamingChunk {
+  delta: string;
+  isComplete: boolean;
+}
+
+/**
  * Base interface for all agents
  */
 export interface IAgent {
@@ -39,6 +47,17 @@ export interface IAgent {
     messages: IMessage[],
     cancellationToken?: AbortSignal
   ): Promise<IMessage>;
+
+  /**
+   * Generate a streaming reply (optional)
+   * @param messages - Array of messages in the conversation
+   * @param cancellationToken - Token to cancel the operation
+   * @returns Async iterator of streaming chunks
+   */
+  generateReplyStream?(
+    messages: IMessage[],
+    cancellationToken?: AbortSignal
+  ): AsyncIterableIterator<StreamingChunk>;
 
   /**
    * Get the agent's name

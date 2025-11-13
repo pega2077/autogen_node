@@ -14,6 +14,14 @@ export interface LLMProviderConfig {
 }
 
 /**
+ * Streaming chunk event
+ */
+export interface StreamingChunk {
+  delta: string;
+  isComplete: boolean;
+}
+
+/**
  * Interface for LLM providers
  */
 export interface ILLMProvider {
@@ -33,6 +41,14 @@ export interface ILLMProvider {
     tools?: IFunctionDefinition[],
     cancellationToken?: AbortSignal
   ): Promise<IMessage>;
+
+  /**
+   * Generate a streaming completion
+   */
+  generateStreamingCompletion?(
+    messages: IMessage[],
+    cancellationToken?: AbortSignal
+  ): AsyncIterableIterator<StreamingChunk>;
 
   /**
    * Get the provider name
