@@ -3,6 +3,18 @@ export { IAgent, IMessage, IAgentConfig } from './core/IAgent';
 export { BaseAgent } from './core/BaseAgent';
 export { GroupChat, GroupChatManager, GroupChatConfig, GroupChatManagerConfig } from './core/GroupChat';
 
+// Memory
+export {
+  IMemory,
+  MemoryContent,
+  MemoryMimeType,
+  ContentType,
+  MemoryQueryResult,
+  UpdateContextResult,
+  ListMemory,
+  ListMemoryConfig
+} from './core/memory';
+
 // Function calling
 export {
   IFunctionContract,

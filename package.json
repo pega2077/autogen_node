@@ -16,6 +16,7 @@
     "example:gemini": "ts-node src/examples/gemini-example.ts",
     "example:functions": "ts-node src/examples/function-calling-example.ts",
     "example:code": "ts-node src/examples/code-execution-example.ts",
+    "example:memory": "ts-node src/examples/memory-example.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

@@ -1,4 +1,5 @@
 import { IAgent, IMessage, IAgentConfig } from './IAgent';
+import { IMemory } from './memory';
 
 /**
  * Base class for all conversable agents
@@ -7,11 +8,13 @@ export abstract class BaseAgent implements IAgent {
   public name: string;
   protected systemMessage: string;
   protected conversationHistory: IMessage[];
+  protected memory: IMemory[];
 
   constructor(config: IAgentConfig) {
     this.name = config.name;
     this.systemMessage = config.systemMessage || '';
     this.conversationHistory = [];
+    this.memory = config.memory || [];
     
     if (this.systemMessage) {
       this.conversationHistory.push({
@@ -122,5 +125,53 @@ export abstract class BaseAgent implements IAgent {
     return terminationKeywords.some(keyword => 
       message.content.toLowerCase().includes(keyword.toLowerCase())
     );
+  }
+
+  /**
+   * Apply memory to messages before sending to LLM.
+   * This creates a copy of messages and injects memory context.
+   * 
+   * @param messages - The original messages
+   * @returns Messages with memory context injected
+   */
+  protected async applyMemoryToMessages(messages: IMessage[]): Promise<IMessage[]> {
+    if (!this.memory || this.memory.length === 0) {
+      return messages;
+    }
+
+    // Create a copy of messages to avoid mutation
+    let updatedMessages = [...messages];
+
+    // Apply each memory in order
+    for (const mem of this.memory) {
+      await mem.updateContext(updatedMessages);
+    }
+
+    return updatedMessages;
+  }
+
+  /**
+   * Add memory to this agent
+   * 
+   * @param memory - Memory instance to add
+   */
+  addMemory(memory: IMemory): void {
+    this.memory.push(memory);
+  }
+
+  /**
+   * Get all memory instances
+   * 
+   * @returns Array of memory instances
+   */
+  getMemory(): IMemory[] {
+    return [...this.memory];
+  }
+
+  /**
+   * Clear all memory instances
+   */
+  clearMemory(): void {
+    this.memory = [];
   }
 }
