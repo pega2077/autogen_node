@@ -23,6 +23,13 @@ export {
   CompressionResult
 } from './core/ContextManager';
 
+// Event-driven architecture (AutoGen v0.4)
+export { AgentId, TopicId } from './core/AgentId';
+export { CancellationToken } from './core/CancellationToken';
+export { Subscription, createSubscription } from './core/Subscription';
+export { AgentRuntime, AgentMetadata, AgentFactory } from './core/AgentRuntime';
+export { SingleThreadedAgentRuntime } from './core/SingleThreadedAgentRuntime';
+
 // Memory
 export {
   IMemory,
