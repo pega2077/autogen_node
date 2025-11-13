@@ -284,7 +284,7 @@ export class GPTAssistantAgent extends BaseAgent {
    */
   async uploadFile(filePath: string, purpose: 'assistants' = 'assistants'): Promise<string> {
     try {
-      const fs = await import('fs');
+      const fs = require('fs');
       const file = await this.openai.files.create({
         file: fs.createReadStream(filePath),
         purpose

@@ -296,9 +296,8 @@ export class TeachableAgent extends ConversableAgent {
     }
 
     try {
-      const fs = await import('fs/promises');
-      const memoriesArray = Array.from(this.memories.entries()).map(([key, value]) => ({
-        key,
+      const fs = require('fs').promises;
+      const memoriesArray = Array.from(this.memories.entries()).map(([k, value]) => ({
         ...value
       }));
       
@@ -321,7 +320,7 @@ export class TeachableAgent extends ConversableAgent {
     }
 
     try {
-      const fs = await import('fs/promises');
+      const fs = require('fs').promises;
       const data = await fs.readFile(this.memoryStoragePath, 'utf-8');
       const memoriesArray = JSON.parse(data);
       
@@ -347,8 +346,7 @@ export class TeachableAgent extends ConversableAgent {
    * Export memories as JSON
    */
   exportMemories(): string {
-    const memoriesArray = Array.from(this.memories.entries()).map(([key, value]) => ({
-      key,
+    const memoriesArray = Array.from(this.memories.entries()).map(([k, value]) => ({
       ...value
     }));
     return JSON.stringify(memoriesArray, null, 2);

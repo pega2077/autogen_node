@@ -198,7 +198,7 @@ export class MultimodalConversableAgent extends ConversableAgent {
     // The LLM provider will handle the conversion
     return {
       ...message,
-      content: message.content as any
+      content: message.content as unknown as string
     };
   }
 
@@ -243,7 +243,7 @@ export class MultimodalConversableAgent extends ConversableAgent {
    */
   async encodeImageToDataUrl(filePath: string, mimeType: string = 'image/jpeg'): Promise<string> {
     try {
-      const fs = await import('fs/promises');
+      const fs = require('fs').promises;
       const imageBuffer = await fs.readFile(filePath);
       
       // Check file size
