@@ -125,11 +125,14 @@ export class AssistantAgent extends BaseAgent {
     cancellationToken?: AbortSignal
   ): Promise<IMessage> {
     try {
+      // Apply memory to messages before processing
+      const messagesWithMemory = await this.applyMemoryToMessages(messages);
+
       // If we have functions registered, use function calling
       if (this.functionMiddleware && this.functionMiddleware.getFunctions().length > 0) {
         const tools = this.getFunctionDefinitions();
         const reply = await this.llmProvider.generateReplyWithFunctions(
-          messages,
+          messagesWithMemory,
           tools,
           cancellationToken
         );
@@ -145,7 +148,7 @@ export class AssistantAgent extends BaseAgent {
           functionResults.forEach(result => this.addToHistory(result));
           
           // Generate a follow-up response with function results
-          const allMessages = [...messages, reply, ...functionResults];
+          const allMessages = [...messagesWithMemory, reply, ...functionResults];
           const finalReply = await this.llmProvider.generateReplyWithFunctions(
             allMessages,
             tools,
@@ -162,7 +165,7 @@ export class AssistantAgent extends BaseAgent {
       
       // Otherwise, use standard completion
       const content = await this.llmProvider.generateCompletion(
-        messages,
+        messagesWithMemory,
         cancellationToken
       );
 

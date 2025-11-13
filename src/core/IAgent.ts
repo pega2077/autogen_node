@@ -1,4 +1,5 @@
 import { IFunctionCall, IFunctionResult } from './IFunctionCall';
+import { IMemory } from './memory';
 
 /**
  * Represents a message in the agent communication system
@@ -53,4 +54,5 @@ export interface IAgentConfig {
   systemMessage?: string;
   temperature?: number;
   maxTokens?: number;
+  memory?: IMemory[];
 }
