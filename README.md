@@ -392,10 +392,12 @@ const manager = new GroupChatManager({
 await manager.runChat('Design a new mobile app feature');
 ```
 
-## Comparison with .NET AutoGen
+## Comparison with Microsoft AutoGen
 
-| Feature | .NET AutoGen | autogen_node |
-|---------|--------------|--------------|
+### Quick Comparison
+
+| Feature | microsoft/autogen | autogen_node |
+|---------|-------------------|--------------|
 | Base Agent Framework | ✅ | ✅ |
 | AssistantAgent | ✅ | ✅ |
 | UserProxyAgent | ✅ | ✅ |
@@ -404,6 +406,26 @@ await manager.runChat('Design a new mobile app feature');
 | Multiple LLM Providers | ✅ | ✅ (OpenAI, Anthropic, Gemini, OpenRouter, Ollama) |
 | Function Calling | ✅ | ✅ |
 | Code Execution | ✅ | ✅ (JavaScript, Python, Bash) |
+| Event-Driven Architecture | ✅ | ❌ |
+| RAG Support | ✅ | ❌ |
+| Nested/Sequential Chats | ✅ | ❌ |
+| AutoGen Studio | ✅ | ❌ |
+| Streaming Responses | ✅ | ❌ |
+
+### Detailed Feature Comparison
+
+For a comprehensive comparison of features between `microsoft/autogen` and `autogen_node`, please see:
+
+- **[功能对比文档 (Chinese)](./FEATURE_COMPARISON.md)** - 完整的功能对比和缺失功能列表
+- **[Feature Comparison (English)](./FEATURE_COMPARISON_EN.md)** - Complete feature comparison and missing features
+- **[功能差距摘要 (Summary)](./FEATURE_GAP_SUMMARY.md)** - 快速概览和优先级建议
+
+**Key Findings:**
+- ✅ **Implemented**: ~9 core features
+- ❌ **Missing**: ~78 features across 12 categories
+  - 🔴 High Priority: ~23 features (core capabilities)
+  - 🟡 Medium Priority: ~35 features (important enhancements)
+  - 🟢 Low Priority: ~20 features (nice to have)
 
 ## Roadmap
 
