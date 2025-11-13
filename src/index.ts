@@ -16,6 +16,12 @@ export {
   runSequentialChat,
   summarizeSequentialChat
 } from './core/SequentialChat';
+export {
+  ContextManager,
+  ContextManagerConfig,
+  CompressionStrategy,
+  CompressionResult
+} from './core/ContextManager';
 
 // Memory
 export {
