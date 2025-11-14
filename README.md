@@ -509,34 +509,53 @@ const reply = await assistant.generateReply([
 
 For more details, see [MEMORY.md](MEMORY.md).
 
-## Comparison with .NET AutoGen
+## Comparison with microsoft/autogen
 
-| Feature | .NET AutoGen | autogen_node |
-|---------|--------------|--------------|
-| Base Agent Framework | ✅ | ✅ |
-| AssistantAgent | ✅ | ✅ |
-| UserProxyAgent | ✅ | ✅ |
-| OpenAI Integration | ✅ | ✅ |
-| Group Chat | ✅ | ✅ |
-| Multiple LLM Providers | ✅ | ✅ (OpenAI, Anthropic, Gemini, OpenRouter, Ollama) |
-| Function Calling | ✅ | ✅ |
-| Code Execution | ✅ | ✅ (JavaScript, Python, Bash) |
-| Memory System | ✅ | ✅ (Based on Python AutoGen) |
-| Event-Driven Architecture (v0.4) | ✅ | ✅ |
-| AgentRuntime | ✅ | ✅ (SingleThreadedAgentRuntime) |
-| Async Message Passing | ✅ | ✅ |
-| Publish/Subscribe | ✅ | ✅ |
+This project implements core features from microsoft/autogen for Node.js/TypeScript.
+
+### ✅ Implemented Features
+
+| Feature | Status |
+|---------|--------|
+| Base Agent Framework | ✅ Complete |
+| AssistantAgent | ✅ Complete |
+| UserProxyAgent | ✅ Complete |
+| Group Chat | ✅ Complete |
+| Multiple LLM Providers | ✅ OpenAI, Anthropic, Gemini, OpenRouter, Ollama |
+| Function Calling | ✅ Complete |
+| Code Execution | ✅ JavaScript, Python, Bash |
+| Memory System | ✅ ListMemory |
+| Event-Driven Architecture (v0.4) | ✅ Complete |
+| AgentRuntime | ✅ SingleThreadedAgentRuntime |
+| Streaming Responses | ✅ OpenAI |
+| Nested Chat | ✅ Complete |
+| Sequential Chat | ✅ Complete |
+| Context Management | ✅ Complete |
+
+### ⏳ Planned Features
+
+For a comprehensive comparison and detailed roadmap of missing features, see [FEATURE_COMPARISON.md](./FEATURE_COMPARISON.md).
+
+**High Priority Missing Features:**
+- RAG/Retrieval Augmented Generation (RetrieveUserProxyAgent, Vector DB)
+- Teachability System (Teachable agents, persistent learning)
+- Observability (OpenTelemetry, tracing, logging)
+- Docker Code Executor
+- Azure OpenAI Support
+- Model Context Protocol (MCP)
+- Built-in Tools System
+- Enterprise Features (Rate limiting, cost tracking)
 
 ## Roadmap
 
+### ✅ Completed Features
 - [x] Base agent framework
 - [x] AssistantAgent with OpenAI
 - [x] UserProxyAgent
 - [x] Group chat capabilities
-- [x] Multiple LLM provider support (OpenAI, OpenRouter, Ollama)
+- [x] Multiple LLM provider support (OpenAI, OpenRouter, Ollama, Anthropic, Gemini)
 - [x] Function calling support
 - [x] Code execution agent (JavaScript, Python, Bash)
-- [x] Additional LLM provider integrations (Anthropic SDK, Google Gemini)
 - [x] Memory system (ListMemory implementation)
 - [x] Event-driven architecture (AutoGen v0.4)
   - [x] AgentRuntime interface
@@ -546,11 +565,55 @@ For more details, see [MEMORY.md](MEMORY.md).
   - [x] Direct message passing (sendMessage)
   - [x] Publish/Subscribe messaging (publishMessage)
   - [x] State persistence and management
-  - [ ] Distributed runtime (multi-process/multi-machine)
-- [ ] Advanced conversation patterns
-- [ ] Streaming responses
-- [ ] Performance optimizations
-- [ ] Additional memory backends (Vector, Database, File-based)
+- [x] Streaming responses (OpenAI)
+- [x] Nested chat support
+- [x] Sequential chat patterns
+- [x] Context management and compression
+
+### 🎯 High Priority (Next 2-4 months)
+- [ ] RAG/Retrieval Augmented Generation
+  - [ ] RetrieveUserProxyAgent
+  - [ ] RetrieveAssistantAgent
+  - [ ] Vector database integration (ChromaDB, Qdrant)
+  - [ ] Embedding models
+  - [ ] Document chunking and text splitting
+- [ ] Teachability System
+  - [ ] Teachable agents
+  - [ ] TextAnalyzerAgent
+  - [ ] Memo database
+  - [ ] Persistent learning
+- [ ] Observability & Telemetry
+  - [ ] OpenTelemetry integration
+  - [ ] Distributed tracing
+  - [ ] Logging system
+  - [ ] Cost tracking
+- [ ] Docker Code Executor
+  - [ ] Secure sandboxed execution
+  - [ ] Resource limits
+- [ ] Azure OpenAI Support
+- [ ] Model Context Protocol (MCP)
+- [ ] Built-in Tools System
+- [ ] Enterprise features (Rate limiting, Quota management)
+
+### 🔶 Medium Priority (4-6 months)
+- [ ] Distributed runtime (multi-process/multi-machine)
+- [ ] Advanced Group Chat patterns (RoundRobin, Selector)
+- [ ] Additional LLM providers (Bedrock, Cohere, Hugging Face)
+- [ ] Streaming for Anthropic and Gemini
+- [ ] Vector memory backends
+- [ ] Multimodal agent support
+- [ ] Browser automation (Playwright)
+- [ ] LangChain tool adapter
+- [ ] Production deployment features
+
+### 🔷 Lower Priority (6+ months)
+- [ ] AutoGen Studio (GUI)
+- [ ] Advanced agents (GraphRAG, Society of Mind)
+- [ ] Additional executors (Jupyter, Azure Container)
+- [ ] VS Code extension
+- [ ] CLI tools
+
+See [FEATURE_COMPARISON.md](./FEATURE_COMPARISON.md) for detailed feature comparison with microsoft/autogen.
 
 ## Contributing
 
