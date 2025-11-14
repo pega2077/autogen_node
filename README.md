@@ -414,11 +414,13 @@ await manager.runChat('Design a new mobile app feature');
 
 ### Detailed Feature Comparison
 
-For a comprehensive comparison of features between `microsoft/autogen` and `autogen_node`, please see:
+For comprehensive comparisons and analysis, please see:
 
+#### Microsoft AutoGen Comparison
 - **[功能对比文档 (Chinese)](./FEATURE_COMPARISON.md)** - 完整的功能对比和缺失功能列表
 - **[Feature Comparison (English)](./FEATURE_COMPARISON_EN.md)** - Complete feature comparison and missing features
 - **[功能差距摘要 (Summary)](./FEATURE_GAP_SUMMARY.md)** - 快速概览和优先级建议
+- **[快速参考 (Quick Reference)](./QUICK_REFERENCE.md)** - 可视化对比和常见问题
 
 **Key Findings:**
 - ✅ **Implemented**: ~9 core features
@@ -426,6 +428,16 @@ For a comprehensive comparison of features between `microsoft/autogen` and `auto
   - 🔴 High Priority: ~23 features (core capabilities)
   - 🟡 Medium Priority: ~35 features (important enhancements)
   - 🟢 Low Priority: ~20 features (nice to have)
+
+#### AI File Manager Comparison
+- **[AI File Manager 功能对比 (Chinese)](./AI_FILE_MANAGER_COMPARISON.md)** - 对比 pega2077/ai_file_manager 的 RAG 和文档管理功能
+
+**Key Gaps from AI File Manager:**
+- ❌ **RAG Infrastructure**: Vector database, embeddings, semantic search
+- ❌ **Document Processing**: Format conversion, chunking, metadata extraction
+- ❌ **Data Persistence**: SQLite/PostgreSQL, conversation history, knowledge base
+- ❌ **API Service**: REST API, WebSocket, streaming responses
+- ❌ **Desktop GUI**: Electron-based desktop application
 
 ## Roadmap
 
