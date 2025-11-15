@@ -83,3 +83,47 @@ export {
   LLMProviderType
 } from './agents/AssistantAgent';
 export { UserProxyAgent, UserProxyConfig, HumanInputMode } from './agents/UserProxyAgent';
+
+// Advanced agent types
+export {
+  ConversableAgent,
+  ConversableAgentConfig
+} from './agents/ConversableAgent';
+
+export {
+  RetrieveUserProxyAgent,
+  RetrieveUserProxyAgentConfig,
+  DocumentChunk,
+  RetrievalFunction
+} from './agents/RetrieveUserProxyAgent';
+
+export {
+  GPTAssistantAgent,
+  GPTAssistantAgentConfig
+} from './agents/GPTAssistantAgent';
+
+export {
+  MultimodalConversableAgent,
+  MultimodalConversableAgentConfig,
+  MultimodalContentType,
+  MultimodalContentPart,
+  MultimodalMessage
+} from './agents/MultimodalConversableAgent';
+
+export {
+  TeachableAgent,
+  TeachableAgentConfig,
+  TeachableMemoryItem
+} from './agents/TeachableAgent';
+
+export {
+  CompressibleAgent,
+  CompressibleAgentConfig,
+  CompressionStrategy as AgentCompressionStrategy
+} from './agents/CompressibleAgent';
+
+export {
+  SocietyOfMindAgent,
+  SocietyOfMindAgentConfig,
+  InnerAgentConfig
+} from './agents/SocietyOfMindAgent';

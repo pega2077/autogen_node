@@ -516,6 +516,13 @@ For more details, see [MEMORY.md](MEMORY.md).
 | Base Agent Framework | ✅ | ✅ |
 | AssistantAgent | ✅ | ✅ |
 | UserProxyAgent | ✅ | ✅ |
+| ConversableAgent | ✅ | ✅ |
+| RetrieveUserProxyAgent (RAG) | ✅ | ✅ |
+| GPTAssistantAgent | ✅ | ✅ |
+| MultimodalConversableAgent | ✅ | ✅ |
+| TeachableAgent | ✅ | ✅ |
+| CompressibleAgent | ✅ | ✅ |
+| SocietyOfMindAgent | ✅ | ✅ |
 | OpenAI Integration | ✅ | ✅ |
 | Group Chat | ✅ | ✅ |
 | Multiple LLM Providers | ✅ | ✅ (OpenAI, Anthropic, Gemini, OpenRouter, Ollama) |
@@ -526,6 +533,20 @@ For more details, see [MEMORY.md](MEMORY.md).
 | AgentRuntime | ✅ | ✅ (SingleThreadedAgentRuntime) |
 | Async Message Passing | ✅ | ✅ |
 | Publish/Subscribe | ✅ | ✅ |
+
+## Advanced Agent Types
+
+autogen_node now includes all major agent types from Microsoft AutoGen:
+
+- **ConversableAgent**: Flexible agent with optional LLM integration and configurable behaviors
+- **RetrieveUserProxyAgent**: RAG-enabled agent for document Q&A and knowledge base queries
+- **GPTAssistantAgent**: Integration with OpenAI's Assistant API for persistent conversations
+- **MultimodalConversableAgent**: Support for images, audio, and multimodal interactions
+- **TeachableAgent**: Learns user preferences and provides personalized responses
+- **CompressibleAgent**: Manages long conversations with automatic history compression
+- **SocietyOfMindAgent**: Complex reasoning using multiple specialized inner agents
+
+For detailed documentation and examples, see [ADVANCED_AGENTS.md](./ADVANCED_AGENTS.md).
 
 ## Roadmap
 
@@ -547,6 +568,14 @@ For more details, see [MEMORY.md](MEMORY.md).
   - [x] Publish/Subscribe messaging (publishMessage)
   - [x] State persistence and management
   - [ ] Distributed runtime (multi-process/multi-machine)
+- [x] Advanced agent types
+  - [x] ConversableAgent (flexible conversable agent)
+  - [x] RetrieveUserProxyAgent (RAG support)
+  - [x] GPTAssistantAgent (OpenAI Assistant API)
+  - [x] MultimodalConversableAgent (image/audio support)
+  - [x] TeachableAgent (learning and personalization)
+  - [x] CompressibleAgent (conversation compression)
+  - [x] SocietyOfMindAgent (multi-agent reasoning)
 - [ ] Advanced conversation patterns
 - [ ] Streaming responses
 - [ ] Performance optimizations
