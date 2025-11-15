@@ -20,6 +20,8 @@
     "example:streaming": "ts-node src/examples/streaming-example.ts",
     "example:nested": "ts-node src/examples/nested-chat-example.ts",
     "example:sequential": "ts-node src/examples/sequential-chat-example.ts",
+    "example:speaker": "ts-node src/examples/speaker-selection-example.ts",
+    "example:swarm": "ts-node src/examples/swarm-mode-example.ts",
     "example:context": "ts-node src/examples/context-management-example.ts",
     "example:events": "ts-node src/examples/event-driven-example.ts",
     "example:conversable": "ts-node src/examples/conversable-agent-example.ts",

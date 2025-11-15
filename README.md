@@ -30,6 +30,11 @@ This project brings the powerful multi-agent orchestration capabilities of Micro
 - **Type-Safe**: Built with TypeScript for enhanced developer experience
 - **Flexible Message System**: Support for different message types and roles
 - **Conversation Management**: Built-in conversation history and state management
+- **Advanced Conversation Patterns**: Complete implementation of AutoGen patterns
+  - **Nested Chat**: Hierarchical conversations with task delegation
+  - **Sequential Chat**: Predefined workflow execution
+  - **Speaker Selection**: Multiple strategies (Round-robin, Random, Manual, Constrained, Auto/LLM-based)
+  - **Swarm Mode**: Dynamic multi-agent task distribution and collaboration
 
 ## Installation
 
@@ -271,6 +276,18 @@ npm run example:code
 # Run memory example
 npm run example:memory
 
+# Run nested chat example
+npm run example:nested
+
+# Run sequential chat example
+npm run example:sequential
+
+# Run speaker selection strategies example
+npm run example:speaker
+
+# Run swarm mode example
+npm run example:swarm
+
 # Run event-driven architecture example (AutoGen v0.4)
 npm run example:events
 
@@ -471,6 +488,106 @@ const manager = new GroupChatManager({
 await manager.runChat('Design a new mobile app feature');
 ```
 
+### Advanced Conversation Patterns
+
+autogen_node implements all major conversation patterns from Microsoft AutoGen:
+
+#### Nested Chat
+
+Delegate tasks to specialist agents:
+
+```typescript
+import { AssistantAgent, supportsNestedChat } from './src/index';
+
+const projectManager = new AssistantAgent({
+  name: 'project_manager',
+  systemMessage: 'You delegate tasks to specialists.',
+  apiKey: process.env.OPENAI_API_KEY!
+});
+
+const specialist = new AssistantAgent({
+  name: 'specialist',
+  systemMessage: 'You are a code review specialist.',
+  apiKey: process.env.OPENAI_API_KEY!
+});
+
+// Delegate task to specialist
+const result = await projectManager.initiateNestedChat(
+  'Review this code: ...',
+  specialist,
+  { maxRounds: 3, addToParentHistory: true }
+);
+```
+
+#### Sequential Chat
+
+Execute agents in predefined workflow order:
+
+```typescript
+import { runSequentialChat, AssistantAgent } from './src/index';
+
+const result = await runSequentialChat({
+  steps: [
+    { agent: researcher, maxRounds: 1 },
+    { agent: writer, maxRounds: 1 },
+    { agent: editor, maxRounds: 1 }
+  ],
+  initialMessage: 'Write an article about AI'
+});
+```
+
+#### Speaker Selection Strategies
+
+Control who speaks next in group chats:
+
+```typescript
+import { GroupChat, RoundRobinSelector, RandomSelector, AutoSelector } from './src/index';
+
+// Round-robin selection
+const chat1 = new GroupChat({
+  agents: [agent1, agent2, agent3],
+  speakerSelector: new RoundRobinSelector()
+});
+
+// Random selection
+const chat2 = new GroupChat({
+  agents: [agent1, agent2, agent3],
+  speakerSelector: new RandomSelector()
+});
+
+// LLM-based intelligent selection
+const coordinator = new AssistantAgent({ ... });
+const chat3 = new GroupChat({
+  agents: [agent1, agent2, agent3],
+  speakerSelector: new AutoSelector({ selectorAgent: coordinator })
+});
+```
+
+#### Swarm Mode
+
+Distribute tasks among agents dynamically:
+
+```typescript
+import { SwarmChat, RoundRobinSelector } from './src/index';
+
+const swarm = new SwarmChat({
+  agents: [researcher, writer, coder, reviewer],
+  maxRoundsPerTask: 3,
+  taskAssignmentSelector: new RoundRobinSelector()
+});
+
+const result = await swarm.run([
+  'Research TypeScript benefits',
+  'Write a tutorial',
+  'Create code examples',
+  'Review documentation'
+]);
+
+console.log(`Completed: ${result.completedTasks.length}`);
+```
+
+See [CONVERSATION_PATTERNS.md](./CONVERSATION_PATTERNS.md) for detailed documentation.
+
 ### Memory Usage
 
 Memory allows agents to maintain context across conversations:
@@ -576,7 +693,11 @@ For detailed documentation and examples, see [ADVANCED_AGENTS.md](./ADVANCED_AGE
   - [x] TeachableAgent (learning and personalization)
   - [x] CompressibleAgent (conversation compression)
   - [x] SocietyOfMindAgent (multi-agent reasoning)
-- [ ] Advanced conversation patterns
+- [x] Advanced conversation patterns
+  - [x] Nested Chat (task delegation)
+  - [x] Sequential Chat (workflow automation)
+  - [x] Speaker Selection Strategies (Round-robin, Random, Manual, Constrained, Auto)
+  - [x] Swarm Mode (dynamic multi-agent collaboration)
 - [ ] Streaming responses
 - [ ] Performance optimizations
 - [ ] Additional memory backends (Vector, Database, File-based)
