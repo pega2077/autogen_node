@@ -8,11 +8,15 @@ import { IAgent, IMessage } from '../core/IAgent';
 
 // Mock agent for testing
 class MockAgent implements IAgent {
+  name: string;
+  
   constructor(
-    private name: string,
+    name: string,
     private shouldComplete: boolean = true,
     private maxRounds: number = 1
-  ) {}
+  ) {
+    this.name = name;
+  }
 
   private roundCount = 0;
 
@@ -222,6 +226,7 @@ describe('SwarmChat', () => {
   describe('Error Handling', () => {
     it('should handle agent errors gracefully', async () => {
       const errorAgent: IAgent = {
+        name: 'error_agent',
         getName: () => 'error_agent',
         generateReply: async () => {
           throw new Error('Agent failed');
@@ -251,6 +256,7 @@ describe('SwarmChat', () => {
     it('should separate completed and failed tasks', async () => {
       const goodAgent = new MockAgent('good', true, 1);
       const errorAgent: IAgent = {
+        name: 'bad',
         getName: () => 'bad',
         generateReply: async () => {
           throw new Error('Failed');

@@ -12,7 +12,11 @@ import { IAgent, IMessage } from '../core/IAgent';
 
 // Mock agent class for testing
 class MockAgent implements IAgent {
-  constructor(private name: string) {}
+  name: string;
+  
+  constructor(name: string) {
+    this.name = name;
+  }
 
   getName(): string {
     return this.name;

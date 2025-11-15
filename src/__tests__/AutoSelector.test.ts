@@ -7,10 +7,14 @@ import { IAgent, IMessage } from '../core/IAgent';
 
 // Mock agent that returns predictable responses
 class MockAgent implements IAgent {
+  name: string;
+  
   constructor(
-    private name: string,
+    name: string,
     private responseOverride?: string
-  ) {}
+  ) {
+    this.name = name;
+  }
 
   getName(): string {
     return this.name;
@@ -105,6 +109,7 @@ describe('AutoSelector', () => {
 
     it('should handle errors gracefully and fallback', async () => {
       const errorAgent: IAgent = {
+        name: 'error_agent',
         getName: () => 'error_agent',
         generateReply: async () => {
           throw new Error('LLM error');

@@ -82,6 +82,7 @@ export class SwarmChat {
   private allowDynamicAgents: boolean;
   private tasks: SwarmTask[];
   private taskIdCounter: number;
+  private lastAssignedAgent?: IAgent;
 
   constructor(config: SwarmChatConfig) {
     if (config.agents.length === 0) {
@@ -165,14 +166,16 @@ export class SwarmChat {
    */
   private async assignTask(task: SwarmTask, agent?: IAgent): Promise<void> {
     if (!agent) {
-      // Use selector to choose an agent
+      // Use selector to choose an agent, passing last assigned agent for context
       agent = await this.taskAssignmentSelector.selectSpeaker(
         this.agents,
-        task.messages
+        task.messages,
+        this.lastAssignedAgent
       );
     }
 
     task.assignedAgent = agent;
+    this.lastAssignedAgent = agent;  // Track for round-robin and other selectors
     task.status = TaskStatus.IN_PROGRESS;
     console.log(`[Swarm] Task '${task.id}' assigned to '${agent.getName()}'`);
   }
@@ -311,5 +314,6 @@ export class SwarmChat {
   reset(): void {
     this.tasks = [];
     this.taskIdCounter = 0;
+    this.lastAssignedAgent = undefined;
   }
 }
