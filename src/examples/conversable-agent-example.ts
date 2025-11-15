@@ -58,8 +58,8 @@ async function main() {
   });
 
   const testMessages = [
-    { role: 'assistant', content: 'Working on it...' },
-    { role: 'assistant', content: 'Task DONE successfully!' }
+    { role: 'assistant' as const, content: 'Working on it...' },
+    { role: 'assistant' as const, content: 'Task DONE successfully!' }
   ];
 
   for (const msg of testMessages) {
