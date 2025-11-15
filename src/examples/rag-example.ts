@@ -95,7 +95,7 @@ async function main() {
   console.log('2. Generating reply with retrieved context:');
   
   const messages = [
-    { role: 'assistant', content: query }
+    { role: 'assistant' as const, content: query }
   ];
   
   const reply = await ragAgent.generateReply(messages);

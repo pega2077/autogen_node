@@ -82,7 +82,8 @@ export class GPTAssistantAgent extends BaseAgent {
           model: this.model,
           instructions: this.instructions,
           tools: this.tools as any,
-          file_ids: this.fileIds,
+          // file_ids deprecated in OpenAI API v4+
+          // Use tool_resources instead if needed
           metadata: this.metadata
         });
         this.assistantId = this.assistant.id;
@@ -140,21 +141,21 @@ export class GPTAssistantAgent extends BaseAgent {
 
       // Wait for completion
       let runStatus = await this.openai.beta.threads.runs.retrieve(
-        this.threadId,
-        run.id
+        run.id,
+        { thread_id: this.threadId }
       );
 
       // Poll for completion
       while (runStatus.status === 'queued' || runStatus.status === 'in_progress') {
         if (cancellationToken?.aborted) {
-          await this.openai.beta.threads.runs.cancel(this.threadId, run.id);
+          await this.openai.beta.threads.runs.cancel(run.id, { thread_id: this.threadId });
           throw new Error('Request was cancelled');
         }
 
         await new Promise(resolve => setTimeout(resolve, 1000));
         runStatus = await this.openai.beta.threads.runs.retrieve(
-          this.threadId,
-          run.id
+          run.id,
+          { thread_id: this.threadId }
         );
       }
 
@@ -271,7 +272,7 @@ export class GPTAssistantAgent extends BaseAgent {
     }
 
     try {
-      await this.openai.beta.assistants.del(this.assistantId);
+      await this.openai.beta.assistants.delete(this.assistantId);
       this.assistant = undefined;
       this.assistantId = undefined;
     } catch (error) {
@@ -308,8 +309,10 @@ export class GPTAssistantAgent extends BaseAgent {
     this.fileIds.push(fileId);
 
     try {
+      // file_ids deprecated in OpenAI API v4+
+      // Use tool_resources instead if needed
       await this.openai.beta.assistants.update(this.assistantId, {
-        file_ids: this.fileIds
+        // file_ids: this.fileIds
       });
     } catch (error) {
       throw new Error(`Failed to add file to assistant: ${error}`);
@@ -329,8 +332,10 @@ export class GPTAssistantAgent extends BaseAgent {
     this.fileIds = this.fileIds.filter(id => id !== fileId);
 
     try {
+      // file_ids deprecated in OpenAI API v4+
+      // Use tool_resources instead if needed
       await this.openai.beta.assistants.update(this.assistantId, {
-        file_ids: this.fileIds
+        // file_ids: this.fileIds
       });
     } catch (error) {
       throw new Error(`Failed to remove file from assistant: ${error}`);

@@ -29,9 +29,25 @@ export interface MultimodalContentPart {
 
 /**
  * Extended message interface for multimodal content
+ * Does not extend IMessage to allow for different content types
  */
-export interface MultimodalMessage extends IMessage {
+export interface MultimodalMessage {
   content: string | MultimodalContentPart[];
+  role: 'user' | 'assistant' | 'system' | 'function' | 'tool';
+  name?: string;
+  functionCall?: {
+    name: string;
+    arguments: string;
+  };
+  toolCalls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+  toolCallId?: string;
 }
 
 /**
@@ -234,8 +250,8 @@ export class MultimodalConversableAgent extends ConversableAgent {
       MultimodalConversableAgent.createImageUrlContent(imageUrl, this.imageDetailLevel)
     ], 'user');
 
-    const reply = await this.generateReply([multimodalMessage], cancellationToken);
-    return reply.content;
+    const reply = await this.generateReply([multimodalMessage as any], cancellationToken);
+    return typeof reply.content === "string" ? reply.content : JSON.stringify(reply.content);
   }
 
   /**
@@ -287,8 +303,8 @@ export class MultimodalConversableAgent extends ConversableAgent {
     ];
 
     const multimodalMessage = this.createMultimodalMessage(contentParts, 'user');
-    const reply = await this.generateReply([multimodalMessage], cancellationToken);
-    return reply.content;
+    const reply = await this.generateReply([multimodalMessage as any], cancellationToken);
+    return typeof reply.content === 'string' ? reply.content : JSON.stringify(reply.content);
   }
 
   /**

@@ -76,7 +76,7 @@ async function main() {
   if (process.env.OPENAI_API_KEY) {
     // Agent will automatically learn from this message
     const messages = [
-      { role: 'user', content: 'Remember that I prefer formal language in documentation.' }
+      { role: 'user' as const, content: 'Remember that I prefer formal language in documentation.' }
     ];
     
     const reply = await agent.generateReply(messages);
