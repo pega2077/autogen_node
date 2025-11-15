@@ -27,6 +27,11 @@
     "example:conversable": "ts-node src/examples/conversable-agent-example.ts",
     "example:teachable": "ts-node src/examples/teachable-agent-example.ts",
     "example:rag": "ts-node src/examples/rag-example.ts",
+    "example:filesystem": "ts-node src/examples/filesystem-tool-example.ts",
+    "example:browser": "ts-node src/examples/browser-tool-example.ts",
+    "example:api": "ts-node src/examples/api-tool-example.ts",
+    "example:docker": "ts-node src/examples/docker-executor-example.ts",
+    "example:image": "ts-node src/examples/image-generation-example.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -56,7 +61,11 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
     "@google/generative-ai": "^0.24.1",
+    "@types/dockerode": "^3.3.46",
+    "axios": "^1.13.2",
+    "dockerode": "^4.0.9",
     "dotenv": "^17.2.3",
-    "openai": "^6.8.1"
+    "openai": "^6.8.1",
+    "playwright": "^1.56.1"
   }
 }
