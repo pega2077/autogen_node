@@ -23,6 +23,25 @@ export {
   CompressionResult
 } from './core/ContextManager';
 
+// Speaker selection strategies
+export { ISpeakerSelector, SpeakerSelectionContext } from './core/ISpeakerSelector';
+export {
+  RoundRobinSelector,
+  RandomSelector,
+  ManualSelector,
+  ConstrainedSelector
+} from './core/SpeakerSelectors';
+export { AutoSelector, AutoSelectorConfig } from './core/AutoSelector';
+
+// Swarm mode
+export {
+  SwarmChat,
+  SwarmChatConfig,
+  SwarmChatResult,
+  SwarmTask,
+  TaskStatus
+} from './core/SwarmChat';
+
 // Event-driven architecture (AutoGen v0.4)
 export { AgentId, TopicId } from './core/AgentId';
 export { CancellationToken } from './core/CancellationToken';

@@ -1,5 +1,7 @@
 import { IAgent, IMessage } from '../core/IAgent';
 import { BaseAgent } from '../core/BaseAgent';
+import { ISpeakerSelector } from './ISpeakerSelector';
+import { RoundRobinSelector } from './SpeakerSelectors';
 
 /**
  * Configuration for GroupChat
@@ -8,6 +10,8 @@ export interface GroupChatConfig {
   agents: IAgent[];
   maxRound?: number;
   adminName?: string;
+  /** Speaker selection strategy (default: round-robin) */
+  speakerSelector?: ISpeakerSelector;
 }
 
 /**
@@ -19,6 +23,7 @@ export class GroupChat {
   private maxRound: number;
   private adminName: string;
   private messages: IMessage[];
+  private speakerSelector: ISpeakerSelector;
 
   constructor(config: GroupChatConfig) {
     if (config.agents.length < 2) {
@@ -29,6 +34,7 @@ export class GroupChat {
     this.maxRound = config.maxRound || 10;
     this.adminName = config.adminName || 'Admin';
     this.messages = [];
+    this.speakerSelector = config.speakerSelector || new RoundRobinSelector();
   }
 
   /**
@@ -53,19 +59,29 @@ export class GroupChat {
   }
 
   /**
-   * Get the next speaker based on a simple round-robin strategy
+   * Get the next speaker using the configured speaker selection strategy
    */
-  private selectNextSpeaker(lastSpeaker?: IAgent): IAgent {
-    if (!lastSpeaker) {
-      return this.agents[0];
-    }
-
-    const currentIndex = this.agents.findIndex(
-      agent => agent.getName() === lastSpeaker.getName()
+  private async selectNextSpeaker(lastSpeaker?: IAgent): Promise<IAgent> {
+    return await this.speakerSelector.selectSpeaker(
+      this.agents,
+      this.messages,
+      lastSpeaker
     );
-    
-    const nextIndex = (currentIndex + 1) % this.agents.length;
-    return this.agents[nextIndex];
+  }
+
+  /**
+   * Set a new speaker selection strategy
+   * @param selector - The new speaker selector to use
+   */
+  setSpeakerSelector(selector: ISpeakerSelector): void {
+    this.speakerSelector = selector;
+  }
+
+  /**
+   * Get the current speaker selector
+   */
+  getSpeakerSelector(): ISpeakerSelector {
+    return this.speakerSelector;
   }
 
   /**
@@ -95,7 +111,7 @@ export class GroupChat {
 
     while (round < this.maxRound) {
       // Select next speaker
-      const nextSpeaker = this.selectNextSpeaker(currentSpeaker);
+      const nextSpeaker = await this.selectNextSpeaker(currentSpeaker);
       
       console.log(`\n[Round ${round + 1}] Next speaker: ${nextSpeaker.getName()}`);
 
