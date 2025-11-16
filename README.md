@@ -276,6 +276,9 @@ npm run example:openrouter
 # Run Ollama example (local LLM)
 npm run example:ollama
 
+# Run Ollama file organizer example (automatic file renaming and tagging)
+npm run example:ollama-organizer
+
 # Run function calling example
 npm run example:functions
 
@@ -345,6 +348,17 @@ const assistant = new AssistantAgent({
   // ... other config
 });
 ```
+
+**Available Operations:**
+- `read_file` - Read file contents
+- `write_file` - Write content to a file
+- `list_directory` - List directory contents
+- `create_directory` - Create new directories
+- `delete_file` - Delete files
+- `file_exists` - Check if file/directory exists
+- `rename_file` - Rename or move files to new locations
+
+**Example Use Case:** See `ollama-file-organizer-example.ts` for an intelligent file organization system that uses LLM to analyze file content, suggest categories, and automatically organize files into appropriate folders with descriptive names.
 
 ### Browser Tools
 
