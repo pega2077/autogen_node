@@ -146,3 +146,25 @@ export {
   SocietyOfMindAgentConfig,
   InnerAgentConfig
 } from './agents/SocietyOfMindAgent';
+
+// Code executors
+export { DockerCodeExecutor } from './executors/DockerCodeExecutor';
+
+// Tools
+export { FileSystemTool } from './tools/FileSystemTool';
+export { BrowserTool } from './tools/BrowserTool';
+export { APITool } from './tools/APITool';
+export { DatabaseTool, DatabaseConfig } from './tools/DatabaseTool';
+export { 
+  ImageGenerationTool, 
+  StableDiffusionTool,
+  ImageSize,
+  ImageQuality,
+  ImageStyle
+} from './tools/ImageGenerationTool';
+export { 
+  ToolCache, 
+  CacheStrategy,
+  globalToolCache,
+  Cached
+} from './tools/ToolCache';
