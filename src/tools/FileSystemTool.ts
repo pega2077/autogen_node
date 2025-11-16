@@ -175,6 +175,21 @@ export class FileSystemTool {
   }
 
   /**
+   * Rename or move a file
+   */
+  async renameFile(oldPath: string, newPath: string): Promise<void> {
+    const fullOldPath = this.validatePath(oldPath);
+    const fullNewPath = this.validatePath(newPath);
+    try {
+      // Ensure destination directory exists
+      await fs.mkdir(path.dirname(fullNewPath), { recursive: true });
+      await fs.rename(fullOldPath, fullNewPath);
+    } catch (error: any) {
+      throw new Error(`Failed to rename file from ${oldPath} to ${newPath}: ${error.message}`);
+    }
+  }
+
+  /**
    * Create function contracts for use with agents
    */
   static createFunctionContracts(tool: FileSystemTool): IFunction[] {
@@ -279,6 +294,28 @@ export class FileSystemTool {
         async (file_path: string) => {
           const exists = await tool.exists(file_path);
           return exists ? `${file_path} exists` : `${file_path} does not exist`;
+        }
+      ),
+      FunctionContract.fromFunction(
+        'rename_file',
+        'Rename or move a file to a new location',
+        [
+          {
+            name: 'old_path',
+            type: 'string',
+            description: 'Current path of the file',
+            required: true
+          },
+          {
+            name: 'new_path',
+            type: 'string',
+            description: 'New path for the file (can include new directory)',
+            required: true
+          }
+        ],
+        async (old_path: string, new_path: string) => {
+          await tool.renameFile(old_path, new_path);
+          return `Successfully renamed ${old_path} to ${new_path}`;
         }
       )
     ];
