@@ -12,6 +12,7 @@
     "example:group": "ts-node src/examples/group-chat.ts",
     "example:openrouter": "ts-node src/examples/openrouter-example.ts",
     "example:ollama": "ts-node src/examples/ollama-example.ts",
+    "example:ollama-organizer": "ts-node src/examples/ollama-file-organizer-example.ts",
     "example:anthropic": "ts-node src/examples/anthropic-example.ts",
     "example:gemini": "ts-node src/examples/gemini-example.ts",
     "example:functions": "ts-node src/examples/function-calling-example.ts",
