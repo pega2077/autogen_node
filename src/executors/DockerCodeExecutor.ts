@@ -5,8 +5,14 @@ import { ICodeExecutor, ICodeExecutionResult, ICodeBlock } from '../core/ICodeEx
  * Docker Code Executor - Execute code safely in Docker containers
  * Provides isolation and security for code execution
  */
+type DockerClient = InstanceType<typeof Docker>;
+
+interface BasicImageInfo {
+  RepoTags?: (string | null | undefined)[];
+}
+
 export class DockerCodeExecutor implements ICodeExecutor {
-  private docker: Docker;
+  private docker: DockerClient;
   private defaultImage: string;
   private timeout: number;
   private containerOptions: any;
@@ -202,11 +208,9 @@ export class DockerCodeExecutor implements ICodeExecutor {
    */
   async listImages(): Promise<string[]> {
     try {
-      const images = await this.docker.listImages();
-      return images
-        .map(img => img.RepoTags || [])
-        .flat()
-        .filter((tag): tag is string => tag !== '<none>:<none>');
+      const images = await this.docker.listImages() as BasicImageInfo[];
+      const tags = images.flatMap((img) => img.RepoTags || []);
+      return tags.filter((tag): tag is string => typeof tag === 'string' && tag !== '<none>:<none>');
     } catch (error: any) {
       throw new Error(`Failed to list images: ${error.message}`);
     }

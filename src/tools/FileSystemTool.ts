@@ -22,21 +22,43 @@ export class FileSystemTool {
   /**
    * Validate file path is within base path and has allowed extension
    */
-  private validatePath(filePath: string): string {
-    const absolutePath = path.isAbsolute(filePath) 
-      ? filePath 
-      : path.join(this.basePath, filePath);
-    
-    const normalizedPath = path.normalize(absolutePath);
-    const normalizedBase = path.normalize(this.basePath);
+  private validatePath(
+    filePath: string,
+    options: { allowDirectory?: boolean } = {}
+  ): string {
+    const normalizedBase = path.resolve(this.basePath);
+
+    // Treat absolute paths outside the base as relative hints from the model
+    let candidatePath = filePath;
+    if (path.isAbsolute(candidatePath)) {
+      const resolvedCandidate = path.resolve(candidatePath);
+      if (
+        resolvedCandidate !== normalizedBase &&
+        !resolvedCandidate.startsWith(`${normalizedBase}${path.sep}`)
+      ) {
+        // Strip leading separators so "/folder" becomes "folder"
+        const relativeHint = candidatePath.replace(/^[/\\]+/, '');
+        candidatePath = path.join(this.basePath, relativeHint);
+      }
+    }
+
+    const absolutePath = path.isAbsolute(candidatePath)
+      ? candidatePath
+      : path.join(this.basePath, candidatePath);
+
+    const normalizedPath = path.resolve(absolutePath);
 
     // Check if path is within base path
-    if (!normalizedPath.startsWith(normalizedBase)) {
+    if (
+      normalizedPath !== normalizedBase &&
+      !normalizedPath.startsWith(`${normalizedBase}${path.sep}`)
+    ) {
       throw new Error(`Access denied: Path ${filePath} is outside base path`);
     }
 
     // Check extension if restrictions exist
-    if (this.allowedExtensions) {
+    const isDirectoryOperation = options.allowDirectory === true;
+    if (this.allowedExtensions && !isDirectoryOperation) {
       const ext = path.extname(normalizedPath).toLowerCase();
       if (!this.allowedExtensions.includes(ext)) {
         throw new Error(`Access denied: File extension ${ext} is not allowed`);
@@ -100,7 +122,7 @@ export class FileSystemTool {
    * List directory contents
    */
   async listDirectory(dirPath: string = '.'): Promise<string[]> {
-    const fullPath = this.validatePath(dirPath);
+    const fullPath = this.validatePath(dirPath, { allowDirectory: true });
     try {
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
       return entries.map(entry => {
@@ -116,7 +138,7 @@ export class FileSystemTool {
    * Create directory
    */
   async createDirectory(dirPath: string): Promise<void> {
-    const fullPath = this.validatePath(dirPath);
+    const fullPath = this.validatePath(dirPath, { allowDirectory: true });
     try {
       await fs.mkdir(fullPath, { recursive: true });
     } catch (error: any) {
@@ -128,7 +150,7 @@ export class FileSystemTool {
    * Delete directory
    */
   async deleteDirectory(dirPath: string): Promise<void> {
-    const fullPath = this.validatePath(dirPath);
+    const fullPath = this.validatePath(dirPath, { allowDirectory: true });
     try {
       await fs.rm(fullPath, { recursive: true, force: true });
     } catch (error: any) {
@@ -140,7 +162,7 @@ export class FileSystemTool {
    * Check if file/directory exists
    */
   async exists(filePath: string): Promise<boolean> {
-    const fullPath = this.validatePath(filePath);
+    const fullPath = this.validatePath(filePath, { allowDirectory: true });
     try {
       await fs.access(fullPath);
       return true;
@@ -159,7 +181,7 @@ export class FileSystemTool {
     created: Date;
     modified: Date;
   }> {
-    const fullPath = this.validatePath(filePath);
+    const fullPath = this.validatePath(filePath, { allowDirectory: true });
     try {
       const stats = await fs.stat(fullPath);
       return {

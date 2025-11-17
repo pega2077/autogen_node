@@ -20,6 +20,7 @@ export interface AssistantAgentConfig extends IAgentConfig {
   maxTokens?: number;
   baseURL?: string;
   functions?: IFunction[];
+  debug?: boolean;
 }
 
 /**
@@ -42,6 +43,7 @@ export class AssistantAgent extends BaseAgent {
   private temperature: number;
   private maxTokens: number;
   private functionMiddleware?: FunctionCallMiddleware;
+  private debug: boolean;
 
   constructor(config: AssistantAgentConfig) {
     super(config);
@@ -51,6 +53,7 @@ export class AssistantAgent extends BaseAgent {
     this.model = config.model || this.getDefaultModel(providerType);
     this.temperature = config.temperature ?? 0;
     this.maxTokens = config.maxTokens || 1000;
+    this.debug = config.debug ?? false;
 
     // Create the appropriate provider
     this.llmProvider = this.createProvider(
@@ -61,7 +64,22 @@ export class AssistantAgent extends BaseAgent {
 
     // Set up function calling if functions are provided
     if (config.functions && config.functions.length > 0) {
-      this.functionMiddleware = new FunctionCallMiddleware(config.functions);
+      this.functionMiddleware = new FunctionCallMiddleware(config.functions, {
+        debug: this.debug,
+        scope: `AssistantAgent:${this.name}`
+      });
+    }
+  }
+
+  private logDebug(message: string, data?: unknown): void {
+    if (!this.debug) {
+      return;
+    }
+    const prefix = `[AssistantAgent:${this.name}] ${message}`;
+    if (data !== undefined) {
+      console.log(prefix, data);
+    } else {
+      console.log(prefix);
     }
   }
 
@@ -125,49 +143,88 @@ export class AssistantAgent extends BaseAgent {
     cancellationToken?: AbortSignal
   ): Promise<IMessage> {
     try {
+      this.logDebug('generateReply invoked', {
+        incomingMessages: messages.length,
+        provider: this.llmProvider.getProviderName()
+      });
       // Apply memory to messages before processing
       const messagesWithMemory = await this.applyMemoryToMessages(messages);
+      this.logDebug('memory applied', {
+        totalMessages: messagesWithMemory.length
+      });
 
       // If we have functions registered, use function calling
       if (this.functionMiddleware && this.functionMiddleware.getFunctions().length > 0) {
         const tools = this.getFunctionDefinitions();
-        const reply = await this.llmProvider.generateReplyWithFunctions(
-          messagesWithMemory,
-          tools,
-          cancellationToken
-        );
-        
-        reply.name = this.name;
-        this.addToHistory(reply);
-        
-        // If the reply contains tool calls, execute them and continue
-        if (this.functionMiddleware.hasToolCalls(reply)) {
-          const functionResults = await this.functionMiddleware.processToolCalls(reply);
-          
-          // Add function results to history
-          functionResults.forEach(result => this.addToHistory(result));
-          
-          // Generate a follow-up response with function results
-          const allMessages = [...messagesWithMemory, reply, ...functionResults];
-          const finalReply = await this.llmProvider.generateReplyWithFunctions(
-            allMessages,
+        this.logDebug('function calling enabled', {
+          toolCount: tools.length,
+          toolNames: tools.map(tool => tool.function.name)
+        });
+        let currentMessages = [...messagesWithMemory];
+        let loopGuard = 0;
+        const maxIterations = 8;
+
+        while (loopGuard < maxIterations) {
+          loopGuard++;
+          const reply = await this.llmProvider.generateReplyWithFunctions(
+            currentMessages,
             tools,
             cancellationToken
           );
-          
-          finalReply.name = this.name;
-          this.addToHistory(finalReply);
-          return finalReply;
+          this.logDebug('LLM reply received', {
+            contentPreview: reply.content?.slice(0, 200) ?? '',
+            toolCalls: reply.toolCalls?.map(tc => tc.function.name) ?? [],
+            functionCall: reply.functionCall?.name ?? null,
+            iteration: loopGuard
+          });
+
+          reply.name = this.name;
+          this.addToHistory(reply);
+          currentMessages.push(reply);
+
+          if (!this.functionMiddleware.hasToolCalls(reply)) {
+            this.logDebug('returning reply without further tool execution', {
+              contentPreview: reply.content?.slice(0, 200) ?? '',
+              iteration: loopGuard
+            });
+            return reply;
+          }
+
+          this.logDebug('tool calls detected', {
+            toolCalls: reply.toolCalls?.map(tc => ({
+              id: tc.id,
+              name: tc.function.name
+            })) ?? (reply.functionCall ? [{ name: reply.functionCall.name }] : []),
+            iteration: loopGuard
+          });
+
+          const functionResults = await this.functionMiddleware.processToolCalls(reply);
+          this.logDebug('tool call results',
+            functionResults.map(result => ({
+              role: result.role,
+              name: result.name,
+              contentPreview: result.content.slice(0, 200)
+            }))
+          );
+
+          functionResults.forEach(result => {
+            this.addToHistory(result);
+            currentMessages.push(result);
+          });
         }
-        
-        return reply;
+
+        throw new Error('Exceeded maximum tool-call iterations without final response');
       }
       
       // Otherwise, use standard completion
+      this.logDebug('using standard completion');
       const content = await this.llmProvider.generateCompletion(
         messagesWithMemory,
         cancellationToken
       );
+      this.logDebug('standard completion received', {
+        contentPreview: content.slice(0, 200)
+      });
 
       const reply: IMessage = {
         role: 'assistant',
@@ -179,6 +236,7 @@ export class AssistantAgent extends BaseAgent {
       return reply;
 
     } catch (error) {
+      this.logDebug('generateReply failed', error);
       if (error instanceof Error) {
         throw new Error(`Failed to generate reply: ${error.message}`);
       }
@@ -214,7 +272,10 @@ export class AssistantAgent extends BaseAgent {
    */
   registerFunction(fn: IFunction): void {
     if (!this.functionMiddleware) {
-      this.functionMiddleware = new FunctionCallMiddleware();
+      this.functionMiddleware = new FunctionCallMiddleware(undefined, {
+        debug: this.debug,
+        scope: `AssistantAgent:${this.name}`
+      });
     }
     this.functionMiddleware.registerFunction(fn);
   }

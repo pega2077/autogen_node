@@ -7,11 +7,27 @@ import { IFunction, IFunctionResult } from './IFunctionCall';
  */
 export class FunctionCallMiddleware {
   private functions: Map<string, IFunction>;
+  private debug: boolean;
+  private scope: string;
 
-  constructor(functions?: IFunction[]) {
+  constructor(functions?: IFunction[], options?: { debug?: boolean; scope?: string }) {
     this.functions = new Map();
+    this.debug = options?.debug ?? false;
+    this.scope = options?.scope ?? 'FunctionCallMiddleware';
     if (functions) {
       functions.forEach(fn => this.registerFunction(fn));
+    }
+  }
+
+  private logDebug(message: string, data?: unknown): void {
+    if (!this.debug) {
+      return;
+    }
+    const prefix = `[${this.scope}] ${message}`;
+    if (data !== undefined) {
+      console.log(prefix, data);
+    } else {
+      console.log(prefix);
     }
   }
 
@@ -20,6 +36,7 @@ export class FunctionCallMiddleware {
    */
   registerFunction(fn: IFunction): void {
     this.functions.set(fn.contract.name, fn);
+    this.logDebug('registered function', fn.contract.name);
   }
 
   /**
@@ -27,6 +44,7 @@ export class FunctionCallMiddleware {
    */
   unregisterFunction(name: string): void {
     this.functions.delete(name);
+    this.logDebug('unregistered function', name);
   }
 
   /**
@@ -53,11 +71,17 @@ export class FunctionCallMiddleware {
     }
 
     try {
+      this.logDebug('executing function', { name, args });
       // Convert args object to array based on function parameters
       const argValues = this.extractArgumentValues(fn, args);
       const result = await fn.executor(...argValues);
+      this.logDebug('function executed', {
+        name,
+        resultPreview: typeof result === 'string' ? result.slice(0, 200) : result
+      });
       return typeof result === 'string' ? result : JSON.stringify(result);
     } catch (error) {
+      this.logDebug('function execution failed', { name, error });
       if (error instanceof Error) {
         throw new Error(`Error executing function ${name}: ${error.message}`);
       }
@@ -90,11 +114,21 @@ export class FunctionCallMiddleware {
 
     // Handle new-style tool calls
     if (message.toolCalls && message.toolCalls.length > 0) {
+      this.logDebug('processing tool calls', message.toolCalls.map(tc => ({
+        id: tc.id,
+        name: tc.function.name,
+        arguments: tc.function.arguments
+      })));
       for (const toolCall of message.toolCalls) {
         if (toolCall.type === 'function') {
           try {
             const args = JSON.parse(toolCall.function.arguments);
             const result = await this.executeFunction(toolCall.function.name, args);
+            this.logDebug('tool call succeeded', {
+              id: toolCall.id,
+              name: toolCall.function.name,
+              resultPreview: result.slice(0, 200)
+            });
             
             results.push({
               role: 'tool',
@@ -104,6 +138,11 @@ export class FunctionCallMiddleware {
             });
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+            this.logDebug('tool call failed', {
+              id: toolCall.id,
+              name: toolCall.function.name,
+              error: errorMsg
+            });
             results.push({
               role: 'tool',
               content: `Error: ${errorMsg}`,
@@ -116,9 +155,17 @@ export class FunctionCallMiddleware {
     }
     // Handle legacy function call format
     else if (message.functionCall) {
+      this.logDebug('processing legacy function call', {
+        name: message.functionCall.name,
+        arguments: message.functionCall.arguments
+      });
       try {
         const args = JSON.parse(message.functionCall.arguments);
         const result = await this.executeFunction(message.functionCall.name, args);
+        this.logDebug('legacy function call succeeded', {
+          name: message.functionCall.name,
+          resultPreview: result.slice(0, 200)
+        });
         
         results.push({
           role: 'function',
@@ -127,12 +174,20 @@ export class FunctionCallMiddleware {
         });
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        this.logDebug('legacy function call failed', {
+          name: message.functionCall.name,
+          error: errorMsg
+        });
         results.push({
           role: 'function',
           content: `Error: ${errorMsg}`,
           name: message.functionCall.name
         });
       }
+    }
+
+    if (results.length === 0) {
+      this.logDebug('no tool calls to process');
     }
 
     return results;
