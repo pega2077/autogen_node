@@ -171,6 +171,8 @@ Next meeting: November 30, 2025`);
     baseURL: ollamaURL,
     systemMessage: `You are a helpful file organization assistant. You can analyze text files and organize them intelligently.
 
+  Before recommending a folder or creating one, inspect the target directory's existing folders (use the provided tools to list them) and determine whether one already suits the content. Prefer reusing an existing folder; only create a new folder when no suitable match exists, and explicitly justify why it was needed.
+
 Before calling any tool, you MUST output a plan in LLM JSON format. Return a JSON object that matches this schema exactly:
 {
   "status": "AWAITING_APPROVAL",
@@ -230,7 +232,7 @@ Be systematic: plan -> read -> analyze -> create folder -> rename/move file.`,
       const conversation: IMessage[] = [
         {
           role: 'user',
-          content: `We need to organize the file "${fileName}". Follow the system instructions: plan first, wait for approval, then execute each step sequentially using the provided tools. Outcomes required: read the file, choose a category/folder, create the folder if needed, produce a descriptive lowercase-hyphenated file name, move/rename the file, and report the final category, filename, and full path.`
+          content: `We need to organize the file "${fileName}". Follow the system instructions: plan first, wait for approval, then execute each step sequentially using the provided tools. Outcomes required: read the file, inspect existing folders in the target directory for a suitable fit before creating new ones, choose the best matching category/folder (reusing an existing folder whenever practical), produce a descriptive lowercase-hyphenated file name, move/rename the file, and report the final category, filename, and full path.`
         }
       ];
 
