@@ -279,73 +279,75 @@ async function plannerSupervisorWorkflow() {
   // 4. 定义需求
   const requirement = '创建一个待办事项应用的 REST API';
 
-  // 5. 创建计划
-  console.log('正在创建计划...');
-  const plan = await planner.createPlan(requirement);
-  console.log(planner.getPlanSummary());
+  // 5. 最大反馈循环次数（默认：3）
+  const maxFeedbackLoops = 3;
+  let feedbackLoopCount = 0;
+  let isComplete = false;
+  let currentRequirement = requirement;
 
-  // 6. 执行任务
-  const executionResults: string[] = [];
-  
-  for (const task of plan.tasks) {
-    // 选择合适的 agent
-    const agent = task.description.toLowerCase().includes('研究') 
-      ? researcher 
-      : developer;
-    
-    planner.assignTask(task.id, agent.getName());
-    planner.updateTaskStatus(task.id, 'in_progress');
+  // 6. 主反馈循环：计划 → 执行 → 验证 → 重新规划（如需要）
+  while (!isComplete && feedbackLoopCount < maxFeedbackLoops) {
+    feedbackLoopCount++;
+
+    // 创建计划（或根据反馈重新规划）
+    console.log(`\n=== 迭代 ${feedbackLoopCount}/${maxFeedbackLoops} ===`);
+    const plan = await planner.createPlan(currentRequirement);
+    console.log(planner.getPlanSummary());
 
     // 执行任务
-    const result = await agent.generateReply([
-      { 
-        role: 'user', 
-        content: `完成这个任务: ${task.description}` 
-      }
-    ]);
-
-    planner.updateTaskStatus(task.id, 'completed', result.content);
-    executionResults.push(result.content);
-  }
-
-  // 7. 验证完成情况
-  console.log('\n正在验证完成情况...');
-  let verification = await supervisor.verifyCompletion(
-    requirement,
-    plan,
-    executionResults
-  );
-
-  console.log(supervisor.generateFeedbackSummary(verification));
-
-  // 8. 反馈循环
-  while (!verification.isComplete && !supervisor.hasReachedMaxIterations()) {
-    console.log('\n正在处理反馈...');
+    const executionResults: string[] = [];
     
-    for (const missingTask of verification.missingTasks.slice(0, 2)) {
-      const result = await developer.generateReply([
+    for (const task of plan.tasks) {
+      // 选择合适的 agent
+      const agent = task.description.toLowerCase().includes('研究') 
+        ? researcher 
+        : developer;
+      
+      planner.assignTask(task.id, agent.getName());
+      planner.updateTaskStatus(task.id, 'in_progress');
+
+      // 执行任务
+      const result = await agent.generateReply([
         { 
           role: 'user', 
-          content: `处理这个反馈: ${missingTask}` 
+          content: `完成这个任务: ${task.description}` 
         }
       ]);
+
+      planner.updateTaskStatus(task.id, 'completed', result.content);
       executionResults.push(result.content);
     }
 
-    // 重新验证
-    verification = await supervisor.verifyCompletion(
+    // 验证完成情况
+    const verification = await supervisor.verifyCompletion(
       requirement,
       plan,
       executionResults
     );
-    
+
     console.log(supervisor.generateFeedbackSummary(verification));
+
+    // 检查是否完成或准备重新规划
+    if (verification.isComplete) {
+      isComplete = true;
+      console.log('✅ 满足所有需求！');
+    } else if (feedbackLoopCount < maxFeedbackLoops) {
+      // 准备根据反馈重新规划
+      console.log('⚠️ 未完成。根据反馈重新规划...');
+      const feedbackSummary = verification.missingTasks.length > 0 
+        ? `缺失:\n${verification.missingTasks.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
+        : verification.feedback;
+      
+      currentRequirement = `${requirement}\n\n上次尝试的反馈:\n${feedbackSummary}\n\n创建新计划以解决这些问题。`;
+    } else {
+      console.log('⚠️ 达到最大迭代次数。');
+    }
   }
 
-  // 9. 最终总结
+  // 7. 最终总结
   console.log('\n=== 工作流完成 ===');
-  console.log(`状态: ${verification.isComplete ? '成功' : '部分完成'}`);
-  console.log(`迭代次数: ${supervisor.getCurrentIteration()}`);
+  console.log(`状态: ${isComplete ? '成功' : '部分完成'}`);
+  console.log(`迭代次数: ${feedbackLoopCount}`);
 }
 
 // 运行工作流

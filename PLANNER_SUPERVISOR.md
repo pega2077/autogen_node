@@ -279,73 +279,75 @@ async function plannerSupervisorWorkflow() {
   // 4. Define requirement
   const requirement = 'Create a REST API for a todo list application';
 
-  // 5. Create plan
-  console.log('Creating plan...');
-  const plan = await planner.createPlan(requirement);
-  console.log(planner.getPlanSummary());
+  // 5. Maximum feedback loop iterations (default: 3)
+  const maxFeedbackLoops = 3;
+  let feedbackLoopCount = 0;
+  let isComplete = false;
+  let currentRequirement = requirement;
 
-  // 6. Execute tasks
-  const executionResults: string[] = [];
-  
-  for (const task of plan.tasks) {
-    // Select appropriate agent
-    const agent = task.description.toLowerCase().includes('research') 
-      ? researcher 
-      : developer;
+  // 6. Main feedback loop: plan → execute → verify → re-plan if needed
+  while (!isComplete && feedbackLoopCount < maxFeedbackLoops) {
+    feedbackLoopCount++;
+
+    // Create plan (or re-plan with feedback)
+    console.log(`\n=== Iteration ${feedbackLoopCount}/${maxFeedbackLoops} ===`);
+    const plan = await planner.createPlan(currentRequirement);
+    console.log(planner.getPlanSummary());
+
+    // Execute tasks
+    const executionResults: string[] = [];
     
-    planner.assignTask(task.id, agent.getName());
-    planner.updateTaskStatus(task.id, 'in_progress');
+    for (const task of plan.tasks) {
+      // Select appropriate agent
+      const agent = task.description.toLowerCase().includes('research') 
+        ? researcher 
+        : developer;
+      
+      planner.assignTask(task.id, agent.getName());
+      planner.updateTaskStatus(task.id, 'in_progress');
 
-    // Execute task
-    const result = await agent.generateReply([
-      { 
-        role: 'user', 
-        content: `Complete this task: ${task.description}` 
-      }
-    ]);
-
-    planner.updateTaskStatus(task.id, 'completed', result.content);
-    executionResults.push(result.content);
-  }
-
-  // 7. Verify completion
-  console.log('\nVerifying completion...');
-  let verification = await supervisor.verifyCompletion(
-    requirement,
-    plan,
-    executionResults
-  );
-
-  console.log(supervisor.generateFeedbackSummary(verification));
-
-  // 8. Feedback loop
-  while (!verification.isComplete && !supervisor.hasReachedMaxIterations()) {
-    console.log('\nAddressing feedback...');
-    
-    for (const missingTask of verification.missingTasks.slice(0, 2)) {
-      const result = await developer.generateReply([
+      // Execute task
+      const result = await agent.generateReply([
         { 
           role: 'user', 
-          content: `Address this feedback: ${missingTask}` 
+          content: `Complete this task: ${task.description}` 
         }
       ]);
+
+      planner.updateTaskStatus(task.id, 'completed', result.content);
       executionResults.push(result.content);
     }
 
-    // Re-verify
-    verification = await supervisor.verifyCompletion(
+    // Verify completion
+    const verification = await supervisor.verifyCompletion(
       requirement,
       plan,
       executionResults
     );
-    
+
     console.log(supervisor.generateFeedbackSummary(verification));
+
+    // Check if complete or prepare for re-planning
+    if (verification.isComplete) {
+      isComplete = true;
+      console.log('✅ All requirements met!');
+    } else if (feedbackLoopCount < maxFeedbackLoops) {
+      // Prepare for re-planning with feedback
+      console.log('⚠️ Incomplete. Re-planning with feedback...');
+      const feedbackSummary = verification.missingTasks.length > 0 
+        ? `Missing:\n${verification.missingTasks.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
+        : verification.feedback;
+      
+      currentRequirement = `${requirement}\n\nFeedback from previous attempt:\n${feedbackSummary}\n\nCreate a new plan addressing these issues.`;
+    } else {
+      console.log('⚠️ Maximum iterations reached.');
+    }
   }
 
-  // 9. Final summary
+  // 7. Final summary
   console.log('\n=== WORKFLOW COMPLETE ===');
-  console.log(`Status: ${verification.isComplete ? 'SUCCESS' : 'PARTIAL'}`);
-  console.log(`Iterations: ${supervisor.getCurrentIteration()}`);
+  console.log(`Status: ${isComplete ? 'SUCCESS' : 'PARTIAL'}`);
+  console.log(`Iterations: ${feedbackLoopCount}`);
 }
 
 // Run the workflow
