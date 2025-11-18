@@ -147,6 +147,19 @@ export {
   InnerAgentConfig
 } from './agents/SocietyOfMindAgent';
 
+export {
+  PlannerAgent,
+  PlannerAgentConfig,
+  TaskPlan,
+  Task
+} from './agents/PlannerAgent';
+
+export {
+  SupervisorAgent,
+  SupervisorAgentConfig,
+  VerificationResult
+} from './agents/SupervisorAgent';
+
 // Code executors
 export { DockerCodeExecutor } from './executors/DockerCodeExecutor';
 
