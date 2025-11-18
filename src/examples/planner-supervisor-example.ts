@@ -1,6 +1,8 @@
 import { PlannerAgent } from '../agents/PlannerAgent';
 import { SupervisorAgent } from '../agents/SupervisorAgent';
 import { AssistantAgent } from '../agents/AssistantAgent';
+import { FileSystemTool } from '../tools/FileSystemTool';
+import * as path from 'path';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -16,10 +18,13 @@ dotenv.config();
  * 4. SupervisorAgent verifies completion and provides feedback
  * 5. If incomplete, the system RE-PLANS with feedback (up to 3 iterations by default)
  * 6. Loop continues until all requirements are met or max iterations reached
+ * 7. Results are automatically saved to src/examples/temp directory
  * 
  * Configuration:
  * - MAX_FEEDBACK_LOOPS: Set via MAX_FEEDBACK_LOOPS env var (default: 3)
  * - When supervisor identifies incomplete work, a new plan is created incorporating the feedback
+ * - Worker agents have access to file writing tools and can save their work
+ * - Final results are saved as markdown summary and JSON data
  */
 async function main() {
   console.log('='.repeat(60));
@@ -38,10 +43,18 @@ async function main() {
   const model = process.env.OLLAMA_MODEL || 'llama2';
   const maxFeedbackLoops = parseInt(process.env.MAX_FEEDBACK_LOOPS || '3', 10);
 
+  // Set up file system tool for saving results
+  const tempDir = path.join(__dirname, 'temp');
+  const fileSystemTool = new FileSystemTool({
+    basePath: tempDir,
+    allowedExtensions: ['.txt', '.md', '.json']
+  });
+
   console.log(`Configuration:`);
   console.log(`  Ollama URL: ${ollamaURL}`);
   console.log(`  Model: ${model}`);
-  console.log(`  Max Feedback Loops: ${maxFeedbackLoops}\n`);
+  console.log(`  Max Feedback Loops: ${maxFeedbackLoops}`);
+  console.log(`  Output Directory: ${tempDir}\n`);
 
   try {
     // Create the planning agent
@@ -65,6 +78,9 @@ async function main() {
       maxIterations: 3
     });
 
+    // Create function contracts for file operations
+    const fileSystemFunctions = FileSystemTool.createFunctionContracts(fileSystemTool);
+
     // Create worker agents with different specializations
     const researcher = new AssistantAgent({
       name: 'researcher',
@@ -73,7 +89,8 @@ async function main() {
       baseURL: ollamaURL,
       systemMessage: 'You are a research agent. Your role is to gather information, analyze topics, and provide well-researched answers. Be thorough and factual.',
       temperature: 0.5,
-      maxTokens: 800
+      maxTokens: 800,
+      functions: fileSystemFunctions
     });
 
     const writer = new AssistantAgent({
@@ -81,9 +98,10 @@ async function main() {
       provider: 'ollama',
       model: model,
       baseURL: ollamaURL,
-      systemMessage: 'You are a writer agent. Your role is to create clear, well-structured content. Focus on clarity, coherence, and good writing style.',
+      systemMessage: 'You are a writer agent. Your role is to create clear, well-structured content. Focus on clarity, coherence, and good writing style. You can save your work to files using the write_file function.',
       temperature: 0.8,
-      maxTokens: 800
+      maxTokens: 800,
+      functions: fileSystemFunctions
     });
 
     const reviewer = new AssistantAgent({
@@ -93,7 +111,8 @@ async function main() {
       baseURL: ollamaURL,
       systemMessage: 'You are a reviewer agent. Your role is to review content for accuracy, completeness, and quality. Provide constructive feedback.',
       temperature: 0.4,
-      maxTokens: 800
+      maxTokens: 800,
+      functions: fileSystemFunctions
     });
 
     // Map of available worker agents
@@ -243,6 +262,71 @@ The guide should include:
     console.log('='.repeat(60));
     console.log(`Feedback loop iterations: ${feedbackLoopCount}/${maxFeedbackLoops}`);
     console.log(`Final status: ${isComplete ? 'REQUIREMENTS MET ✓' : 'PARTIAL COMPLETION'}`);
+    console.log('='.repeat(60));
+
+    // Save results to file
+    console.log('\n');
+    console.log('='.repeat(60));
+    console.log('SAVING RESULTS');
+    console.log('='.repeat(60));
+    
+    try {
+      // Create timestamp for unique filenames
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      
+      // Prepare summary content
+      const summaryContent = `# Planner-Supervisor Workflow Results
+Generated: ${new Date().toISOString()}
+
+## Configuration
+- Model: ${model}
+- Max Feedback Loops: ${maxFeedbackLoops}
+- Feedback Loop Iterations: ${feedbackLoopCount}
+- Final Status: ${isComplete ? 'REQUIREMENTS MET ✓' : 'PARTIAL COMPLETION'}
+
+## User Requirement
+${userRequirement}
+
+## Execution Results
+${allExecutionResults.map((result, index) => `### Result ${index + 1}\n${result}\n`).join('\n')}
+
+## Workflow Summary
+1. PlannerAgent analyzed requirements and created task plans
+2. Worker agents (researcher, writer, reviewer) executed tasks
+3. SupervisorAgent verified completion and provided feedback
+4. ${feedbackLoopCount > 1 ? `System re-planned and re-executed ${feedbackLoopCount - 1} time(s)` : 'Completed in single iteration'}
+5. Final status: ${isComplete ? 'All requirements met' : 'Partial completion - max iterations reached'}
+`;
+
+      // Save summary
+      const summaryFilename = `workflow-summary-${timestamp}.md`;
+      await fileSystemTool.writeFile(summaryFilename, summaryContent);
+      console.log(`✓ Saved workflow summary to: ${path.join(tempDir, summaryFilename)}`);
+
+      // Save execution results as JSON
+      const resultsData = {
+        timestamp: new Date().toISOString(),
+        configuration: {
+          model,
+          maxFeedbackLoops,
+          ollamaURL
+        },
+        requirement: userRequirement,
+        feedbackLoopCount,
+        isComplete,
+        executionResults: allExecutionResults
+      };
+      
+      const resultsFilename = `execution-results-${timestamp}.json`;
+      await fileSystemTool.writeFile(resultsFilename, JSON.stringify(resultsData, null, 2));
+      console.log(`✓ Saved execution results to: ${path.join(tempDir, resultsFilename)}`);
+      
+      console.log('\n📁 All results saved to:', tempDir);
+      
+    } catch (saveError) {
+      console.error('⚠️  Error saving results:', saveError);
+    }
+    
     console.log('='.repeat(60));
 
     console.log('\n');

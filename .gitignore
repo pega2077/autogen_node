@@ -8,3 +8,4 @@ coverage/
 .vscode/
 .idea/
 .jest-cache/
+src/examples/temp/
