@@ -18,13 +18,13 @@ dotenv.config();
  * 4. SupervisorAgent verifies completion and provides feedback
  * 5. If incomplete, the system RE-PLANS with feedback (up to 3 iterations by default)
  * 6. Loop continues until all requirements are met or max iterations reached
- * 7. Results are automatically saved to src/examples/temp directory
+ * 7. Worker agents autonomously decide when to save their work using file writing tools
  * 
  * Configuration:
  * - MAX_FEEDBACK_LOOPS: Set via MAX_FEEDBACK_LOOPS env var (default: 3)
  * - When supervisor identifies incomplete work, a new plan is created incorporating the feedback
- * - Worker agents have access to file writing tools and can save their work
- * - Final results are saved as markdown summary and JSON data
+ * - Worker agents have access to file writing tools and autonomously choose when to save results
+ * - Files are saved to src/examples/temp directory when agents decide it's appropriate
  */
 async function main() {
   console.log('='.repeat(60));
@@ -87,7 +87,9 @@ async function main() {
       provider: 'ollama',
       model: model,
       baseURL: ollamaURL,
-      systemMessage: 'You are a research agent. Your role is to gather information, analyze topics, and provide well-researched answers. Be thorough and factual.',
+      systemMessage: `You are a research agent. Your role is to gather information, analyze topics, and provide well-researched answers. Be thorough and factual.
+
+You have access to file operations and can save your research findings to files when appropriate. Consider saving important research results to preserve them.`,
       temperature: 0.5,
       maxTokens: 800,
       functions: fileSystemFunctions
@@ -98,7 +100,9 @@ async function main() {
       provider: 'ollama',
       model: model,
       baseURL: ollamaURL,
-      systemMessage: 'You are a writer agent. Your role is to create clear, well-structured content. Focus on clarity, coherence, and good writing style. You can save your work to files using the write_file function.',
+      systemMessage: `You are a writer agent. Your role is to create clear, well-structured content. Focus on clarity, coherence, and good writing style.
+
+You have access to file writing tools. When you create content (guides, documentation, articles, etc.), you should SAVE your work to appropriate files using the write_file function. Use descriptive filenames like 'guide.md', 'tutorial.txt', or 'summary.md'. This ensures your work is preserved and can be reviewed later.`,
       temperature: 0.8,
       maxTokens: 800,
       functions: fileSystemFunctions
@@ -109,7 +113,9 @@ async function main() {
       provider: 'ollama',
       model: model,
       baseURL: ollamaURL,
-      systemMessage: 'You are a reviewer agent. Your role is to review content for accuracy, completeness, and quality. Provide constructive feedback.',
+      systemMessage: `You are a reviewer agent. Your role is to review content for accuracy, completeness, and quality. Provide constructive feedback.
+
+You have access to file operations. Consider saving your review reports or feedback summaries to files when it would be helpful for documentation purposes.`,
       temperature: 0.4,
       maxTokens: 800,
       functions: fileSystemFunctions
@@ -264,79 +270,20 @@ The guide should include:
     console.log(`Final status: ${isComplete ? 'REQUIREMENTS MET ✓' : 'PARTIAL COMPLETION'}`);
     console.log('='.repeat(60));
 
-    // Save results to file
     console.log('\n');
-    console.log('='.repeat(60));
-    console.log('SAVING RESULTS');
-    console.log('='.repeat(60));
-    
-    try {
-      // Create timestamp for unique filenames
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      
-      // Prepare summary content
-      const summaryContent = `# Planner-Supervisor Workflow Results
-Generated: ${new Date().toISOString()}
-
-## Configuration
-- Model: ${model}
-- Max Feedback Loops: ${maxFeedbackLoops}
-- Feedback Loop Iterations: ${feedbackLoopCount}
-- Final Status: ${isComplete ? 'REQUIREMENTS MET ✓' : 'PARTIAL COMPLETION'}
-
-## User Requirement
-${userRequirement}
-
-## Execution Results
-${allExecutionResults.map((result, index) => `### Result ${index + 1}\n${result}\n`).join('\n')}
-
-## Workflow Summary
-1. PlannerAgent analyzed requirements and created task plans
-2. Worker agents (researcher, writer, reviewer) executed tasks
-3. SupervisorAgent verified completion and provided feedback
-4. ${feedbackLoopCount > 1 ? `System re-planned and re-executed ${feedbackLoopCount - 1} time(s)` : 'Completed in single iteration'}
-5. Final status: ${isComplete ? 'All requirements met' : 'Partial completion - max iterations reached'}
-`;
-
-      // Save summary
-      const summaryFilename = `workflow-summary-${timestamp}.md`;
-      await fileSystemTool.writeFile(summaryFilename, summaryContent);
-      console.log(`✓ Saved workflow summary to: ${path.join(tempDir, summaryFilename)}`);
-
-      // Save execution results as JSON
-      const resultsData = {
-        timestamp: new Date().toISOString(),
-        configuration: {
-          model,
-          maxFeedbackLoops,
-          ollamaURL
-        },
-        requirement: userRequirement,
-        feedbackLoopCount,
-        isComplete,
-        executionResults: allExecutionResults
-      };
-      
-      const resultsFilename = `execution-results-${timestamp}.json`;
-      await fileSystemTool.writeFile(resultsFilename, JSON.stringify(resultsData, null, 2));
-      console.log(`✓ Saved execution results to: ${path.join(tempDir, resultsFilename)}`);
-      
-      console.log('\n📁 All results saved to:', tempDir);
-      
-    } catch (saveError) {
-      console.error('⚠️  Error saving results:', saveError);
-    }
-    
+    console.log('📁 Note: Agents with file writing capabilities may have saved their work to:', tempDir);
+    console.log('   Check the temp directory for any files created by the agents during execution.');
     console.log('='.repeat(60));
 
     console.log('\n');
     console.log('Summary of this example:');
     console.log('1. PlannerAgent analyzes requirements and creates a task plan');
     console.log('2. Worker agents (researcher, writer, reviewer) execute tasks');
-    console.log('3. SupervisorAgent verifies completion and provides feedback');
-    console.log(`4. If incomplete, system RE-PLANS and re-executes (up to ${maxFeedbackLoops} loops)`);
-    console.log(`5. Completed in ${feedbackLoopCount} iteration(s)`);
-    console.log('\nThis demonstrates a complete planning-execution-supervision cycle with re-planning!');
+    console.log('3. Worker agents autonomously decide when to save their work to files');
+    console.log('4. SupervisorAgent verifies completion and provides feedback');
+    console.log(`5. If incomplete, system RE-PLANS and re-executes (up to ${maxFeedbackLoops} loops)`);
+    console.log(`6. Completed in ${feedbackLoopCount} iteration(s)`);
+    console.log('\nThis demonstrates a complete planning-execution-supervision cycle with autonomous agent behavior!');
 
   } catch (error) {
     console.error('\nError:', error);
