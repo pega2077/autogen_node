@@ -284,6 +284,9 @@ npm run example:ollama-organizer
 # Run planner-supervisor example (task planning and verification with Ollama)
 npm run example:planner-supervisor
 
+# Run GitHub AI search example (web search and API tools with Ollama)
+npm run example:github-ai-search
+
 # Run function calling example
 npm run example:functions
 

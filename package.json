@@ -15,6 +15,7 @@
     "example:ollama-organizer": "ts-node src/examples/ollama-file-organizer-example.ts",
     "example:planner-supervisor": "ts-node src/examples/planner-supervisor-example.ts",
     "example:planner-demo": "ts-node src/examples/planner-supervisor-demo.ts",
+    "example:github-ai-search": "ts-node src/examples/github-ai-search-example.ts",
     "example:anthropic": "ts-node src/examples/anthropic-example.ts",
     "example:gemini": "ts-node src/examples/gemini-example.ts",
     "example:functions": "ts-node src/examples/function-calling-example.ts",
